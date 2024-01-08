@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "gifnoc"
+version = "0.1.0"
+description = "Handle configuration for multiple libraries"
+authors = ["Olivier Breuleux <breuleux@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+ovld = "^0.3.2"
+apischema = "^0.18.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.12.1"
+ruff = "^0.1.9"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
