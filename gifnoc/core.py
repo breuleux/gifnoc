@@ -5,8 +5,10 @@ from dataclasses import dataclass
 import os
 import sys
 from types import SimpleNamespace
+from typing import TypedDict
 from apischema import deserialize
 
+from .acquire import acquire
 from .merge import merge
 from .parse import parse_source
 from .registry import registry
@@ -29,11 +31,11 @@ class Configuration:
 active_configuration = ContextVar("active_configuration", default=None)
 
 
-def parse_sources(*sources):
+def parse_sources(model, *sources):
     result = {}
     for src in sources:
-        for dct in parse_source(src):
-            result = merge(result, dct)
+        for ctx, dct in parse_source(src):
+            result = merge(result, acquire(model, dct, ctx))
     return result
 
 
@@ -47,11 +49,12 @@ def get(key):
 
 
 def load_sources(*sources):
-    dct = parse_sources(*sources)
-    rval = dict(dct)
-    for k, v in dct.items():
-        model = registry[k].cls
-        rval[k] = deserialize(model, v)
+    model = TypedDict(
+        "GifnocTypedDict",
+        {k: v.cls for k, v in registry.items()}  # type: ignore
+    )
+    dct = parse_sources(model, *sources)
+    rval = deserialize(model, dct)
     return Configuration(base=dct, built=rval)
 
 

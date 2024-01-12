@@ -11,10 +11,17 @@ from .registry import envmap
 EnvironType = type(environ)
 
 
-class FromEnviron(dict):
-    def __init__(self, value):
-        super().__init__()
-        self.value = value
+class Context:
+    pass
+
+
+class FileContext(Context):
+    def __init__(self, path):
+        self.path = path
+
+
+class EnvContext(Context):
+    pass
 
 
 try:
@@ -60,7 +67,7 @@ def parse_source(source: (str, Path)):  # noqa: F811
         for entry in source.iterdir():
             yield from parse_source(entry)
     else:
-        yield parse_file(source)
+        yield (FileContext(path=source.parent), parse_file(source))
 
 
 @ovld
@@ -70,12 +77,12 @@ def parse_source(source: Path):  # noqa: F811
 
 @ovld
 def parse_source(source: dict):  # noqa: F811
-    yield source
+    yield (Context(), source)
 
 
 @ovld
 def parse_source(source: NoneType):  # noqa: F811
-    yield {}
+    yield (Context(), {})
 
 
 @ovld
@@ -87,14 +94,5 @@ def parse_source(source: EnvironType):  # noqa: F811
             for part in pth[:-1]:
                 current = current.setdefault(part, {})
             value = source[k]
-            if value.lower() == "true":
-                value = True
-            elif value.lower() == "false":
-                value = False
-            else:
-                try:
-                    value = float(value)
-                except ValueError:
-                    pass
             current[pth[-1]] = value
-    yield rval
+    yield (EnvContext(), rval)
