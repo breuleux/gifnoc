@@ -1,17 +1,21 @@
 from argparse import ArgumentParser
+import argparse
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 import os
 import sys
 from types import SimpleNamespace
-from typing import TypedDict
+from typing import Union
 from apischema import deserialize
+
+from gifnoc.utils import type_at_path
+from ovld import ovld
 
 from .acquire import acquire
 from .merge import merge
-from .parse import parse_source
-from .registry import registry
+from .parse import OptionsMap, parse_source
+from .registry import global_model
 
 
 @dataclass
@@ -49,10 +53,7 @@ def get(key):
 
 
 def load_sources(*sources):
-    model = TypedDict(
-        "GifnocTypedDict",
-        {k: v.cls for k, v in registry.items()}  # type: ignore
-    )
+    model = global_model()
     dct = parse_sources(model, *sources)
     rval = deserialize(model, dct)
     return Configuration(base=dct, built=rval)
@@ -66,13 +67,40 @@ def overlay(*sources):
         yield new.built
 
 
+@dataclass
+class Info:
+    argparser: ArgumentParser
+    opt: str
+    help: str | None
+
+
+@ovld
+def create_arg(model: bool, info: Info):
+    info.argparser.add_argument(
+        info.opt,
+        action=argparse.BooleanOptionalAction,
+        dest=info.opt,
+        help=info.help,
+    )
+
+
+@ovld
+def create_arg(model: Union[int, float, str], info: Info):
+    info.argparser.add_argument(
+        info.opt,
+        type=info.type,
+        dest=info.opt,
+        help=info.help,
+    )
+
+
 @contextmanager
 def gifnoc(
     envvar="APP_CONFIG",
     config_argument="--config",
     default_source=None,
     sources=[],
-    option_map={},  # TODO: implement
+    option_map={},
     argparser=None,
     parse_args=True,
     argv=[],
@@ -86,6 +114,12 @@ def gifnoc(
             action="append",
             help="Configuration file(s) to load.",
         )
+
+        model = global_model()
+        for opt, path in option_map.items():
+            typ, hlp = type_at_path(model, path.split("."))
+            create_arg[typ, Info](typ, Info(argparser=argparser, help=hlp, opt=opt))
+
         options = argparser.parse_args(argv or sys.argv[1:])
     else:
         options = SimpleNamespace(config=[])
@@ -96,6 +130,7 @@ def gifnoc(
         default_source,
         *sources,
         *(getattr(options, "$config") or []),
+        OptionsMap(options=options, map=option_map),
     ]
 
     with load_sources(*sources) as cfg:

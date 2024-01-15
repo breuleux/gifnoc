@@ -1,3 +1,5 @@
+from argparse import Namespace
+from dataclasses import dataclass
 import json
 from pathlib import Path
 from types import NoneType
@@ -22,6 +24,12 @@ class FileContext(Context):
 
 class EnvContext(Context):
     pass
+
+
+@dataclass
+class OptionsMap:
+    options: Namespace
+    map: dict[str, str]
 
 
 try:
@@ -96,3 +104,19 @@ def parse_source(source: EnvironType):  # noqa: F811
             value = source[k]
             current[pth[-1]] = value
     yield (EnvContext(), rval)
+
+
+@ovld
+def parse_source(source: OptionsMap):  # noqa: F811
+    rval = {}
+    for k, pth in source.map.items():
+        if isinstance(pth, str):
+            pth = pth.split(".")
+        if k in source.options:
+            current = rval
+            for part in pth[:-1]:
+                current = current.setdefault(part, {})
+            value = getattr(source.options, k)
+            if value is not None:
+                current[pth[-1]] = value
+    yield (Context(), rval)

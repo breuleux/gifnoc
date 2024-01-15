@@ -1,17 +1,12 @@
 from dataclasses import is_dataclass, fields
 from pathlib import Path
-from typing import TypedDict
 from ovld import meta, ovld
 
 from .parse import parse_file, Context, FileContext, EnvContext
 
 
 def is_structure(cls):
-    return (
-        issubclass(cls, dict)
-        or issubclass(cls, list)
-        or is_dataclass(cls)
-    )
+    return issubclass(cls, dict) or issubclass(cls, list) or is_dataclass(cls)
 
 
 @ovld
@@ -46,7 +41,7 @@ def _acquire(model: bool, x: bool, context: Context):
 
 @ovld
 def _acquire(model: list, xs: list, context: Context):
-    element_model, = model.__args__
+    (element_model,) = model.__args__
     return [acquire(element_model, x, context) for x in xs]
 
 

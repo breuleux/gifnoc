@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import TypedDict
 
 
 registry = {}
@@ -23,6 +24,12 @@ def register(key, cls=None):
         return reg
     else:
         return reg(cls)
+
+
+def global_model():
+    return TypedDict(
+        "GifnocGlobalModel", {k: v.cls for k, v in registry.items()}  # type: ignore
+    )
 
 
 def map_environment_variables(**mapping):
