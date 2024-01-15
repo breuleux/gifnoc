@@ -64,3 +64,13 @@ def type_at_path(model, path):
             raise TypeError(f"Cannot resolve type at `{opath}` from `{omodel}`")
 
     return model, doc
+
+
+def get_at_path(value, path):
+    curr = value
+    for p in path:
+        if isinstance(curr, dict):
+            curr = curr[p]
+        else:
+            curr = getattr(curr, p)
+    return curr

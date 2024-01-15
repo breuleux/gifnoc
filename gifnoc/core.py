@@ -9,13 +9,13 @@ from types import SimpleNamespace
 from typing import Union
 from apischema import deserialize
 
-from gifnoc.utils import type_at_path
 from ovld import ovld
 
 from .acquire import acquire
 from .merge import merge
 from .parse import OptionsMap, parse_source
-from .registry import global_model
+from .registry import envmap, global_model
+from .utils import get_at_path, type_at_path
 
 
 @dataclass
@@ -26,6 +26,7 @@ class Configuration:
 
     def __enter__(self):
         self._token = active_configuration.set(self)
+        return self
 
     def __exit__(self, exct, excv, tb):
         active_configuration.reset(self._token)
@@ -85,7 +86,7 @@ def create_arg(model: bool, info: Info):
 
 
 @ovld
-def create_arg(model: Union[int, float, str], info: Info):
+def create_arg(model: Union[int, float, str], info: Info):  # noqa: F811
     info.argparser.add_argument(
         info.opt,
         type=info.type,
@@ -104,6 +105,7 @@ def gifnoc(
     argparser=None,
     parse_args=True,
     argv=[],
+    write_back_environ=True,
 ):
     if parse_args:
         if argparser is None:
@@ -134,4 +136,13 @@ def gifnoc(
     ]
 
     with load_sources(*sources) as cfg:
+        if write_back_environ:
+            for envvar, pth in envmap.items():
+                value = get_at_path(cfg.built, pth)
+                if isinstance(value, str):
+                    os.environ[envvar] = value
+                elif isinstance(value, bool):
+                    os.environ[envvar] = str(int(value))
+                else:
+                    os.environ[envvar] = str(value)
         yield cfg
