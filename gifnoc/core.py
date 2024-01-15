@@ -4,8 +4,9 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 import os
+from pathlib import Path
 import sys
-from types import SimpleNamespace
+from types import SimpleNamespace, UnionType
 from typing import Union
 from apischema import deserialize
 
@@ -73,12 +74,14 @@ class Info:
     argparser: ArgumentParser
     opt: str
     help: str | None
+    aliases: list
 
 
 @ovld
 def create_arg(model: bool, info: Info):
     info.argparser.add_argument(
         info.opt,
+        *info.aliases,
         action=argparse.BooleanOptionalAction,
         dest=info.opt,
         help=info.help,
@@ -86,11 +89,13 @@ def create_arg(model: bool, info: Info):
 
 
 @ovld
-def create_arg(model: Union[int, float, str], info: Info):  # noqa: F811
+def create_arg(model: Union[int, float, str, Path], info: Info):  # noqa: F811
     info.argparser.add_argument(
         info.opt,
-        type=info.type,
+        *info.aliases,
+        type=model,
         dest=info.opt,
+        metavar=info.opt.strip("-").upper(),
         help=info.help,
     )
 
@@ -113,14 +118,20 @@ def gifnoc(
         argparser.add_argument(
             config_argument,
             dest="$config",
+            metavar="CONFIG",
             action="append",
             help="Configuration file(s) to load.",
         )
 
         model = global_model()
         for opt, path in option_map.items():
+            main, *aliases = opt.split(",")
             typ, hlp = type_at_path(model, path.split("."))
-            create_arg[typ, Info](typ, Info(argparser=argparser, help=hlp, opt=opt))
+            if isinstance(typ, UnionType):
+                typ = typ.__args__[0]
+            create_arg[typ, Info](
+                typ, Info(argparser=argparser, help=hlp, opt=main, aliases=aliases)
+            )
 
         options = argparser.parse_args(argv or sys.argv[1:])
     else:

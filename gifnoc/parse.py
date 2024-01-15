@@ -110,6 +110,7 @@ def parse_source(source: EnvironType):  # noqa: F811
 def parse_source(source: OptionsMap):  # noqa: F811
     rval = {}
     for k, pth in source.map.items():
+        k, *_ = k.split(",")
         if isinstance(pth, str):
             pth = pth.split(".")
         if k in source.options:
