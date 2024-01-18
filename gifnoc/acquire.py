@@ -1,5 +1,6 @@
 from dataclasses import is_dataclass, fields
 from pathlib import Path
+from types import UnionType
 from ovld import meta, ovld
 
 from .parse import parse_file, Context, FileContext, EnvContext
@@ -54,12 +55,15 @@ def _acquire(model: dict, xs: dict, context: Context):
             if k in xs
         }
 
-    else:
+    elif hasattr(model, "__args__"):
         key_model, element_model = model.__args__
         return {
             acquire(key_model, k, context): acquire(element_model, v, context)
             for k, v in xs.items()
         }
+
+    else:
+        return xs
 
 
 @ovld
@@ -102,5 +106,7 @@ def _acquire(model: object, obj: object, context: Context):
 
 
 def acquire(model, obj, context):
+    if isinstance(model, UnionType):
+        model, *_ = model.__args__
     method = _acquire[getattr(model, "__origin__", model), type(obj), type(context)]
     return method(model, obj, context)
