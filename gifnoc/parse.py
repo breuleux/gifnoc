@@ -7,7 +7,6 @@ from ovld import ovld
 from os import environ
 
 from .utils import DELETE, MissingProxy
-from .registry import envmap
 
 
 EnvironType = type(environ)
@@ -29,6 +28,12 @@ class EnvContext(Context):
 @dataclass
 class OptionsMap:
     options: Namespace
+    map: dict[str, str]
+
+
+@dataclass
+class EnvironMap:
+    environ: EnvironType
     map: dict[str, str]
 
 
@@ -94,14 +99,14 @@ def parse_source(source: NoneType):  # noqa: F811
 
 
 @ovld
-def parse_source(source: EnvironType):  # noqa: F811
+def parse_source(source: EnvironMap):  # noqa: F811
     rval = {}
-    for k, pth in envmap.items():
-        if k in source:
+    for k, pth in source.map.items():
+        if k in source.environ:
             current = rval
             for part in pth[:-1]:
                 current = current.setdefault(part, {})
-            value = source[k]
+            value = source.environ[k]
             current[pth[-1]] = value
     yield (EnvContext(), rval)
 

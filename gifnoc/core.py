@@ -14,8 +14,8 @@ from ovld import ovld
 
 from .acquire import acquire
 from .merge import merge
-from .parse import OptionsMap, parse_source
-from .registry import envmap, global_model
+from .parse import EnvironMap, OptionsMap, parse_source
+from .registry import envmap as default_environ_map, global_model
 from .utils import get_at_path, type_at_path
 
 
@@ -107,6 +107,8 @@ def gifnoc(
     default_source=None,
     sources=[],
     option_map={},
+    environ_map=default_environ_map,
+    environ=os.environ,
     argparser=None,
     parse_args=True,
     argv=[],
@@ -138,22 +140,22 @@ def gifnoc(
         options = SimpleNamespace(config=[])
 
     sources = [
-        os.environ.get(envvar, None),
-        os.environ,
+        environ.get(envvar, None),
         default_source,
         *sources,
         *(getattr(options, "$config") or []),
+        EnvironMap(environ=environ, map=environ_map),
         OptionsMap(options=options, map=option_map),
     ]
 
     with load_sources(*sources) as cfg:
         if write_back_environ:
-            for envvar, pth in envmap.items():
+            for envvar, pth in environ_map.items():
                 value = get_at_path(cfg.built, pth)
                 if isinstance(value, str):
-                    os.environ[envvar] = value
+                    environ[envvar] = value
                 elif isinstance(value, bool):
-                    os.environ[envvar] = str(int(value))
+                    environ[envvar] = str(int(value))
                 else:
-                    os.environ[envvar] = str(value)
+                    environ[envvar] = str(value)
         yield cfg
