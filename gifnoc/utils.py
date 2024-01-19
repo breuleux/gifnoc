@@ -26,6 +26,8 @@ DELETE = Named("DELETE")
 
 
 class MissingProxy:
+    """Substitute for a missing import that errors out only on getattr."""
+
     def __init__(self, error):
         self._error = error
 
@@ -34,6 +36,13 @@ class MissingProxy:
 
 
 def type_at_path(model, path):
+    """Get the type at a given path from the given configuration model.
+
+    Argument:
+        model: The configuration model (the type of configuration objects).
+        path: Dot-separated fields, e.g. ``server.port``, in which case the
+            return value would be the type of ``cfg.server.port``.
+    """
     omodel = model
     opath = path
     for entry in path:
@@ -66,8 +75,18 @@ def type_at_path(model, path):
     return model, doc
 
 
-def get_at_path(value, path):
-    curr = value
+def get_at_path(cfg, path):
+    """Get the value at a given path from the given config.
+
+    The fields in ``path`` should be dot-separated and will be extracted from the
+    configuration using getitem if a dict, getattr otherwise.
+
+    Argument:
+        cfg: The configuration object.
+        path: Dot-separated fields, e.g. ``server.port``, in which case the
+            return value would be ``cfg.server.port``.
+    """
+    curr = cfg
     for p in path:
         if isinstance(curr, dict):
             curr = curr[p]
