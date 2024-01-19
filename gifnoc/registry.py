@@ -41,6 +41,4 @@ class Registry:
 global_registry = Registry()
 
 register = global_registry.register
-global_model = global_registry.model
 map_environment_variables = global_registry.map_environment_variables
-global_environ_map = global_registry.envmap

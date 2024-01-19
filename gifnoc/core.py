@@ -15,7 +15,7 @@ from ovld import ovld
 from .acquire import acquire
 from .merge import merge
 from .parse import EnvironMap, OptionsMap, parse_source
-from .registry import global_environ_map, global_model
+from .registry import global_registry
 from .utils import get_at_path, type_at_path
 
 
@@ -67,15 +67,15 @@ def get(key):
     return cfg.built[key]
 
 
-def load_sources(*sources):
-    model = global_model()
+def load_sources(*sources, registry=global_registry):
+    model = registry.model()
     dct = parse_sources(model, *sources)
     rval = deserialize(model, dct)
     return Configuration(base=dct, built=rval)
 
 
 @contextmanager
-def overlay(*sources):
+def overlay(*sources, registry=global_registry):
     """Overlay extra configuration.
 
     This acts as a context manager. The modified configuration is available
@@ -83,9 +83,10 @@ def overlay(*sources):
 
     Arguments:
         sources: Paths to configuration files or dicts.
+        registry: Model registry to use. Defaults to the global registry.
     """
     current = active_configuration.get() or Configuration({}, None)
-    new = load_sources(current.base, *sources)
+    new = load_sources(current.base, *sources, registry=registry)
     with new:
         yield new.built
 
@@ -128,8 +129,9 @@ def gifnoc(
     envvar="APP_CONFIG",
     config_argument="--config",
     sources=[],
+    registry=global_registry,
     option_map={},
-    environ_map=global_environ_map,
+    environ_map=None,
     environ=os.environ,
     argparser=None,
     parse_args=True,
@@ -149,16 +151,16 @@ def gifnoc(
             one or more configuration files. (default: "--config")
         sources: A list of Path objects and/or dicts that will be merged into
             the final configuration.
+        registry: Which model registry to use. Defaults to the global registry
+            in ``gifnoc.registry.global_registry``.
         option_map: A map from command-line arguments to configuration paths,
             for example ``{"--port": "server.port"}`` will add a ``--port``
             command-line argument that will set ``gifnoc.config.server.port``.
         environ_map: A map from environment variables to configuration paths,
             for example ``{"SERVER_PORT": "server.port}`` will set
             ``gifnoc.config.server.port`` to the value of the ``$SERVER_PORT``
-            environment variable. By default this is the global map in
-            ``gifnoc.registry.global_environment_map``, which most of the
-            time is what you want, so there is usually no need to provide
-            this argument.
+            environment variable. By default this is the environment map in
+            the registry used.
         environ: The environment variables, by default ``os.environ``.
         argparser: The argument parser to add arguments to. If None, an
             argument parser will be created.
@@ -183,7 +185,7 @@ def gifnoc(
                 help="Configuration file(s) to load.",
             )
 
-        model = global_model()
+        model = registry.model()
         for opt, path in option_map.items():
             main, *aliases = opt.split(",")
             typ, hlp = type_at_path(model, path.split("."))
@@ -197,6 +199,9 @@ def gifnoc(
     else:
         options = SimpleNamespace(config=[])
 
+    if environ_map is None:
+        environ_map = registry.envmap
+
     sources = [
         environ.get(envvar, None),
         *sources,
@@ -205,7 +210,7 @@ def gifnoc(
         OptionsMap(options=options, map=option_map),
     ]
 
-    with load_sources(*sources) as cfg:
+    with load_sources(*sources, registry=registry) as cfg:
         if write_back_environ:
             for envvar, pth in environ_map.items():
                 value = get_at_path(cfg, pth)
