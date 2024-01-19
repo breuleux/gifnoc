@@ -15,19 +15,32 @@ from ovld import ovld
 from .acquire import acquire
 from .merge import merge
 from .parse import EnvironMap, OptionsMap, parse_source
-from .registry import envmap as default_environ_map, global_model
+from .registry import global_environ_map, global_model
 from .utils import get_at_path, type_at_path
 
 
 @dataclass
 class Configuration:
+    """Hold configuration base dict and built configuration.
+
+    Configuration objects act as context managers, setting the
+    ``gifnoc.active_configuration`` context variable. All code that
+    runs from within the ``with`` block will thus have access to that
+    specific configuration through ``gifnoc.config``.
+
+    Attributes:
+        base: The configuration serialized as a dictionary.
+        built: The deserialized configuration object, with the proper
+            types.
+    """
+
     base: dict
     built: object
     _token: object = None
 
     def __enter__(self):
         self._token = active_configuration.set(self)
-        return self
+        return self.built
 
     def __exit__(self, exct, excv, tb):
         active_configuration.reset(self._token)
@@ -63,6 +76,14 @@ def load_sources(*sources):
 
 @contextmanager
 def overlay(*sources):
+    """Overlay extra configuration.
+
+    This acts as a context manager. The modified configuration is available
+    inside the context manager and is popped off afterwards.
+
+    Arguments:
+        sources: Paths to configuration files or dicts.
+    """
     current = active_configuration.get() or Configuration({}, None)
     new = load_sources(current.base, *sources)
     with new:
@@ -71,6 +92,8 @@ def overlay(*sources):
 
 @dataclass
 class Info:
+    """Holds information for the create_arg function."""
+
     argparser: ArgumentParser
     opt: str
     help: str | None
@@ -106,7 +129,7 @@ def gifnoc(
     config_argument="--config",
     sources=[],
     option_map={},
-    environ_map=default_environ_map,
+    environ_map=global_environ_map,
     environ=os.environ,
     argparser=None,
     parse_args=True,
@@ -133,8 +156,9 @@ def gifnoc(
             for example ``{"SERVER_PORT": "server.port}`` will set
             ``gifnoc.config.server.port`` to the value of the ``$SERVER_PORT``
             environment variable. By default this is the global map in
-            ``gifnoc.registry.envmap``, which most of the time is what you want,
-            so there is usually no need to provide this argument.
+            ``gifnoc.registry.global_environment_map``, which most of the
+            time is what you want, so there is usually no need to provide
+            this argument.
         environ: The environment variables, by default ``os.environ``.
         argparser: The argument parser to add arguments to. If None, an
             argument parser will be created.
@@ -184,7 +208,7 @@ def gifnoc(
     with load_sources(*sources) as cfg:
         if write_back_environ:
             for envvar, pth in environ_map.items():
-                value = get_at_path(cfg.built, pth)
+                value = get_at_path(cfg, pth)
                 if isinstance(value, str):
                     environ[envvar] = value
                 elif isinstance(value, bool):
