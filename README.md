@@ -30,22 +30,20 @@ class User:
     email: str
     admin: bool
 
-# The dataclass for the 'server' key in the configuration
-@gifnoc.register("server")
 @dataclass
 class Server:
     port: int = 8080
     host: str = "localhost"
     users: list[User]
 
-# Synchronize a few environment variables to specific configuration values
-gifnoc.map_environment_variables(
-    APP_PORT="server.port",
-    APP_HOST="server.host",
+server_config = gifnoc.define(
+    field="server",
+    model=Server,
+    environ={
+        APP_PORT="port",
+        APP_HOST="host",
+    }
 )
-
-# Easily import the server configuration from gifnoc
-from gifnoc.config import server as server_config
 
 if __name__ == "__main__":
     with gifnoc.gifnoc(
@@ -58,7 +56,7 @@ if __name__ == "__main__":
     ):
         # The `server_config` object will always refer to the `server` key in the
         # current configuration
-        print(server_config.port)
+        print("Port:", server_config.port)
 ```
 
 
