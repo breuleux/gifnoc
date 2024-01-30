@@ -108,7 +108,10 @@ def get_attribute_docstrings(cls):
     current = None
     current_line = None
     for_next = []
-    src = dedent(inspect.getsource(cls))
+    try:
+        src = dedent(inspect.getsource(cls))
+    except OSError:
+        return {}
     # We concatenate comment tokens from the tokenizer with
     # variable/docstring tokens extracted using the ast module
     data = sorted(scrape_comments(src) + scrape_variables_and_docstrings(src))

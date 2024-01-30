@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import TypedDict
 
 
 @dataclass
@@ -28,8 +27,15 @@ class Registry:
             return reg(cls)
 
     def model(self):
-        return TypedDict(
-            "GifnocGlobalModel", {k: v.cls for k, v in self.models.items()}  # type: ignore
+        return dataclass(
+            type(
+                "GifnocGlobalModel",
+                (),
+                {
+                    "__annotations__": {k: v.cls for k, v in self.models.items()},
+                    **{k: None for k, _ in self.models.items()},
+                },
+            )
         )
 
     def map_environment_variables(self, **mapping):

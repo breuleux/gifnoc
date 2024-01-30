@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 import argparse
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 import os
 from pathlib import Path
 import sys
@@ -45,6 +45,7 @@ class Configuration:
     def build(self):
         model = self.registry.model()
         dct = parse_sources(model, *self.sources)
+        dct = {f.name: dct[f.name] for f in fields(model) if f.name in dct}
         self._built = deserialize(model, dct)
         self.base = dct
         self.version = self.registry.version
