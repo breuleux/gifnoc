@@ -1,4 +1,4 @@
-from .core import active_configuration
+from .core import current_configuration
 
 
 class _Proxy:
@@ -6,7 +6,7 @@ class _Proxy:
         self._pth = pth
 
     def __obj(self):
-        container = active_configuration.get()
+        container = current_configuration()
         if container is None:
             raise Exception("No configuration was loaded.")
         try:

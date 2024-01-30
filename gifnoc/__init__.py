@@ -1,4 +1,13 @@
-from .core import active_configuration, get, gifnoc, overlay  # noqa: F401
+from .core import (  # noqa: F401
+    Configuration,
+    active_configuration,
+    current_configuration,
+    get,
+    gifnoc,
+    overlay,
+    load,
+    load_global,
+)
 from .registry import (  # noqa: F401
     register,
     map_environment_variables,

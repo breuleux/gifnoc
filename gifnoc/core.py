@@ -68,7 +68,12 @@ class Configuration:
         self._token = None
 
 
+global_configuration = None
 active_configuration = ContextVar("active_configuration", default=None)
+
+
+def current_configuration():
+    return active_configuration.get() or global_configuration
 
 
 def parse_sources(model, *sources):
@@ -80,7 +85,7 @@ def parse_sources(model, *sources):
 
 
 def get(key):
-    cfg = active_configuration.get()
+    cfg = current_configuration()
     if cfg is None:
         raise Exception("No configuration was loaded.")
     elif key not in cfg.built:
@@ -99,9 +104,22 @@ def overlay(*sources, registry=global_registry):
         sources: Paths to configuration files or dicts.
         registry: Model registry to use. Defaults to the global registry.
     """
-    current = active_configuration.get() or Configuration(registry=registry, sources=[])
+    current = current_configuration() or Configuration(registry=registry, sources=[])
     with current.overlay(sources):
         yield current.built
+
+
+def load(*sources, registry=global_registry):
+    container = Configuration(sources=sources, registry=registry)
+    return container.built
+
+
+def load_global(*sources, registry=global_registry):
+    global global_configuration
+
+    container = Configuration(sources=sources, registry=registry)
+    global_configuration = container
+    return container.built
 
 
 @dataclass
@@ -150,6 +168,7 @@ def gifnoc(
     parse_args=True,
     argv=None,
     write_back_environ=True,
+    set_global=True,
 ):
     """Context manager to find/assemble configuration for the code within.
 
@@ -185,6 +204,7 @@ def gifnoc(
             ``environ["SERVER_PORT"] = gifnoc.config.server.port`` after parsing
             the configuration. (default: True)
     """
+    global global_configuration
 
     if parse_args:
         if argparser is None:
@@ -223,17 +243,25 @@ def gifnoc(
         OptionsMap(options=options, map=option_map),
     ]
 
-    with Configuration(sources=sources, registry=registry) as cfg:
-        if write_back_environ:
-            for envvar, pth in environ_map.items():
-                value = get_at_path(cfg, pth)
-                if isinstance(value, str):
-                    environ[envvar] = value
-                elif isinstance(value, bool):
-                    environ[envvar] = str(int(value))
-                else:
-                    environ[envvar] = str(value)
-        if parse_args:
-            yield cfg, options
-        else:
-            yield cfg
+    container = Configuration(sources=sources, registry=registry)
+    with container as cfg:
+        if set_global:
+            old_global = global_configuration
+            global_configuration = container
+        try:
+            if write_back_environ:
+                for envvar, pth in environ_map.items():
+                    value = get_at_path(cfg, pth)
+                    if isinstance(value, str):
+                        environ[envvar] = value
+                    elif isinstance(value, bool):
+                        environ[envvar] = str(int(value))
+                    else:
+                        environ[envvar] = str(value)
+            if parse_args:
+                yield cfg, options
+            else:
+                yield cfg
+        finally:
+            if set_global:
+                global_configuration = old_global
