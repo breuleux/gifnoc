@@ -191,7 +191,7 @@ def gifnoc(
         if config_argument:
             argparser.add_argument(
                 config_argument,
-                dest="$config",
+                dest="config",
                 metavar="CONFIG",
                 action="append",
                 help="Configuration file(s) to load.",
@@ -217,7 +217,7 @@ def gifnoc(
     sources = [
         environ.get(envvar, None),
         *sources,
-        *(getattr(options, "$config") or []),
+        *(options.config or []),
         EnvironMap(environ=environ, map=environ_map),
         OptionsMap(options=options, map=option_map),
     ]
@@ -232,4 +232,7 @@ def gifnoc(
                     environ[envvar] = str(int(value))
                 else:
                     environ[envvar] = str(value)
-        yield cfg
+        if parse_args:
+            yield cfg, options
+        else:
+            yield cfg
