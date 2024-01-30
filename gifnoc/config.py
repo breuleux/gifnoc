@@ -6,11 +6,11 @@ class _Proxy:
         self._pth = pth
 
     def __obj(self):
-        cfg = active_configuration.get()
-        if cfg is None:
+        container = active_configuration.get()
+        if container is None:
             raise Exception("No configuration was loaded.")
         try:
-            cfg = cfg.built
+            cfg = container.built
             for k in self._pth:
                 if isinstance(cfg, dict):
                     cfg = cfg[k]

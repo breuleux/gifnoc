@@ -19,7 +19,6 @@ from .registry import global_registry
 from .utils import get_at_path, type_at_path
 
 
-@dataclass
 class Configuration:
     """Hold configuration base dict and built configuration.
 
@@ -29,14 +28,35 @@ class Configuration:
     specific configuration through ``gifnoc.config``.
 
     Attributes:
+        sources: The data sources used to populate the configuration.
+        registry: The registry to use for the data model.
         base: The configuration serialized as a dictionary.
         built: The deserialized configuration object, with the proper
             types.
     """
 
-    base: dict
-    built: object
-    _token: object = None
+    def __init__(self, sources, registry):
+        self.sources = sources
+        self.registry = registry
+        self.base = None
+        self._built = None
+        self.version = None
+
+    def build(self):
+        model = self.registry.model()
+        dct = parse_sources(model, *self.sources)
+        self._built = deserialize(model, dct)
+        self.base = dct
+        self.version = self.registry.version
+
+    @property
+    def built(self):
+        if not self._built or self.registry.version > self.version:
+            self.build()
+        return self._built
+
+    def overlay(self, sources):
+        return Configuration([*self.sources, *sources], self.registry)
 
     def __enter__(self):
         self._token = active_configuration.set(self)
@@ -67,13 +87,6 @@ def get(key):
     return cfg.built[key]
 
 
-def load_sources(*sources, registry=global_registry):
-    model = registry.model()
-    dct = parse_sources(model, *sources)
-    rval = deserialize(model, dct)
-    return Configuration(base=dct, built=rval)
-
-
 @contextmanager
 def overlay(*sources, registry=global_registry):
     """Overlay extra configuration.
@@ -85,10 +98,9 @@ def overlay(*sources, registry=global_registry):
         sources: Paths to configuration files or dicts.
         registry: Model registry to use. Defaults to the global registry.
     """
-    current = active_configuration.get() or Configuration({}, None)
-    new = load_sources(current.base, *sources, registry=registry)
-    with new:
-        yield new.built
+    current = active_configuration.get() or Configuration(registry=registry, sources=[])
+    with current.overlay(sources):
+        yield current.built
 
 
 @dataclass
@@ -210,7 +222,7 @@ def gifnoc(
         OptionsMap(options=options, map=option_map),
     ]
 
-    with load_sources(*sources, registry=registry) as cfg:
+    with Configuration(sources=sources, registry=registry) as cfg:
         if write_back_environ:
             for envvar, pth in environ_map.items():
                 value = get_at_path(cfg, pth)

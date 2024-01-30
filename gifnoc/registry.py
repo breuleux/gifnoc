@@ -12,6 +12,7 @@ class Registry:
     def __init__(self):
         self.models = {}
         self.envmap = {}
+        self.version = 0
 
     def register(self, key, cls=None):
         def reg(cls):
@@ -19,6 +20,7 @@ class Registry:
                 key=key,
                 cls=cls,
             )
+            self.version += 1
 
         if cls is None:
             return reg
@@ -36,6 +38,7 @@ class Registry:
             path,
         ) in mapping.items():
             self.envmap[envvar] = path.split(".")
+        self.version += 1
 
 
 global_registry = Registry()
