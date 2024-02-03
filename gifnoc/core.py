@@ -105,8 +105,8 @@ def overlay(*sources, registry=global_registry):
         registry: Model registry to use. Defaults to the global registry.
     """
     current = current_configuration() or Configuration(registry=registry, sources=[])
-    with current.overlay(sources):
-        yield current.built
+    with current.overlay(sources) as overlaid:
+        yield overlaid
 
 
 def load(*sources, registry=global_registry):
