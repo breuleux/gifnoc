@@ -89,7 +89,7 @@ def parse_file(file, parser=None):
 @ovld
 def parse_source(source: (str, Path)):  # noqa: F811
     """Parse a source from the filesystem."""
-    source = Path(source)
+    source = Path(source).expanduser()
     if source.is_dir():
         for entry in source.iterdir():
             yield from parse_source(entry)
