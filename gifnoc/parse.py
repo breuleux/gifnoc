@@ -12,6 +12,10 @@ from .utils import DELETE, MissingProxy
 EnvironType = type(environ)
 
 
+class NoParserError(Exception):
+    """Exception to raise when no parser is found."""
+
+
 class Context:
     """Context of a configuration source."""
 
@@ -81,7 +85,7 @@ def parse_file(file, parser=None):
         sfx = file.suffix
         parser = extensions.get(sfx, None)
         if parser is None:
-            raise Exception(f"No parser found for the {sfx} format")
+            raise NoParserError(f"No parser found for the {sfx} format")
     text = file.read_text()
     return parser.load(text)
 
@@ -91,8 +95,11 @@ def parse_source(source: (str, Path)):  # noqa: F811
     """Parse a source from the filesystem."""
     source = Path(source).expanduser()
     if source.is_dir():
-        for entry in source.iterdir():
-            yield from parse_source(entry)
+        for entry in sorted(source.iterdir()):
+            try:
+                yield from parse_source(entry)
+            except NoParserError:
+                continue
     else:
         yield (FileContext(path=source.parent), parse_file(source))
 
