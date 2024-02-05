@@ -40,10 +40,11 @@ class Configuration:
         self.registry = registry
         self.base = None
         self._built = None
+        self._model = None
         self.version = None
 
     def build(self):
-        model = self.registry.model()
+        self._model = model = self.registry.model()
         dct = parse_sources(model, *self.sources)
         dct = {f.name: dct[f.name] for f in fields(model) if f.name in dct}
         self._built = deserialize(model, dct)
@@ -61,10 +62,20 @@ class Configuration:
 
     def __enter__(self):
         self._token = active_configuration.set(self)
-        return self.built
+        built = self.built
+        for f in fields(self._model):
+            value = getattr(built, f.name, None)
+            if hasattr(value, "__enter__"):
+                value.__enter__()
+        return built
 
     def __exit__(self, exct, excv, tb):
         active_configuration.reset(self._token)
+        built = self.built
+        for f in fields(self._model):
+            value = getattr(built, f.name, None)
+            if hasattr(value, "__exit__"):
+                value.__exit__(exct, excv, tb)
         self._token = None
 
 
@@ -122,6 +133,7 @@ def load_global(*sources, registry=global_registry):
     global global_configuration
 
     container = Configuration(sources=sources, registry=registry)
+    container.__enter__()
     global_configuration = container
     return container.built
 
