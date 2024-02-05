@@ -173,7 +173,7 @@ def create_arg(model: Union[int, float, str, Path], info: Info):  # noqa: F811
 
 @contextmanager
 def gifnoc(
-    envvar="APP_CONFIG",
+    envvar="GIFNOC_FILE",
     config_argument="--config",
     sources=[],
     registry=global_registry,
@@ -194,7 +194,7 @@ def gifnoc(
 
     Arguments:
         envvar: Name of the environment variable to use for the path to the
-            configuration. (default: "APP_CONFIG")
+            configuration. (default: "GIFNOC_FILE")
         config_argument: Name of the command line argument used to specify
             one or more configuration files. (default: "--config")
         sources: A list of Path objects and/or dicts that will be merged into
@@ -251,8 +251,11 @@ def gifnoc(
     if environ_map is None:
         environ_map = registry.envmap
 
+    from_env = environ.get(envvar, None)
+    from_env = from_env.split(",") if from_env else []
+
     sources = [
-        environ.get(envvar, None),
+        *from_env,
         *sources,
         *(options.config or []),
         EnvironMap(environ=environ, map=environ_map),
