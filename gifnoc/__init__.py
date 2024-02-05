@@ -4,9 +4,10 @@ from .core import (  # noqa: F401
     current_configuration,
     get,
     gifnoc,
-    overlay,
+    is_loaded,
     load,
     load_global,
+    overlay,
 )
 from .registry import (  # noqa: F401
     register,

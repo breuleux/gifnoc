@@ -84,6 +84,10 @@ def parse_sources(model, *sources):
     return result
 
 
+def is_loaded():
+    return current_configuration() is not None
+
+
 def get(key):
     cfg = current_configuration()
     if cfg is None:
