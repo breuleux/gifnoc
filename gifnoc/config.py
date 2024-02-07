@@ -21,6 +21,12 @@ class _Proxy:
             key = ".".join(self._pth)
             raise Exception(f"No configuration was loaded for key '{key}'.")
 
+    def __str__(self):
+        return f"Proxy for {self.__obj()}"
+
+    def __repr__(self):
+        return f"_Proxy({self.__obj()!r})"
+
     def __getattr__(self, attr):
         return getattr(self.__obj(), attr)
 
