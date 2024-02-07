@@ -90,6 +90,8 @@ def get_at_path(cfg, path):
     for p in path:
         if isinstance(curr, dict):
             curr = curr[p]
+        elif isinstance(curr, (list, tuple)):
+            curr = curr[int(p)]
         else:
             curr = getattr(curr, p)
     return curr

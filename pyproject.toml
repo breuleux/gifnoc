@@ -15,6 +15,13 @@ apischema = "^0.18.1"
 black = "^23.12.1"
 ruff = "^0.1.9"
 
+[tool.poetry.scripts]
+gifnoc = "gifnoc.__main__:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 99
+extend-select = ["I"]
