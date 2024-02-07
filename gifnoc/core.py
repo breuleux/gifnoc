@@ -103,9 +103,9 @@ def get(key):
     cfg = current_configuration()
     if cfg is None:
         raise Exception("No configuration was loaded.")
-    elif key not in cfg.built:
+    elif not getattr(cfg.built, key, None):
         raise Exception(f"No configuration was loaded for key '{key}'.")
-    return cfg.built[key]
+    return getattr(cfg.built, key)
 
 
 @contextmanager
