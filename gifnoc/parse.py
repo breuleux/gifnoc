@@ -61,10 +61,16 @@ class JSONParser:
     def load(self, text):
         return json.loads(text)
 
+    def dump(self, obj):
+        return json.dumps(obj, indent=4)
+
 
 class YAMLParser:
     def load(self, text):
         return yaml.safe_load(text)
+
+    def dump(self, obj):
+        return yaml.safe_dump(obj)
 
 
 extensions = {
