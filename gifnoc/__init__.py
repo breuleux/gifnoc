@@ -8,6 +8,7 @@ from .core import (  # noqa: F401
     load,
     load_global,
     overlay,
+    use,
 )
 from .registry import (  # noqa: F401
     register,

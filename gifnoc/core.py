@@ -124,6 +124,13 @@ def overlay(*sources, registry=global_registry):
         yield overlaid
 
 
+@contextmanager
+def use(*sources, registry=global_registry):
+    """Use a configuration."""
+    with Configuration(sources, registry) as cfg:
+        yield cfg
+
+
 def load(*sources, registry=global_registry):
     container = Configuration(sources=sources, registry=registry)
     return container.built
