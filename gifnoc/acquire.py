@@ -102,7 +102,7 @@ def _acquire(model: str, s: str, context: EnvContext):
 
 @ovld
 def _acquire(model: Path, s: str, context: FileContext):
-    return str((context.path or ".") / s)
+    return str(((context.path or ".") / s).resolve())
 
 
 @ovld
