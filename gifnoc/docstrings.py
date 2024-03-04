@@ -4,7 +4,6 @@ import tokenize
 from functools import partial
 from textwrap import dedent
 
-
 #############################
 # Extracting the docstrings #
 #############################
