@@ -9,14 +9,14 @@ from pathlib import Path
 from types import SimpleNamespace, UnionType
 from typing import Union
 
-from apischema import deserialize
+from apischema import ValidationError, deserialize
 from ovld import ovld
 
 from .acquire import acquire
 from .merge import merge
 from .parse import EnvironMap, OptionsMap, parse_source
 from .registry import global_registry
-from .utils import get_at_path, type_at_path
+from .utils import ConfigurationError, get_at_path, type_at_path
 
 
 class Configuration:
@@ -47,7 +47,10 @@ class Configuration:
         self._model = model = self.registry.model()
         dct = parse_sources(model, *self.sources)
         dct = {f.name: dct[f.name] for f in fields(model) if f.name in dct}
-        self._built = deserialize(model, dct, pass_through=lambda _: True)
+        try:
+            self._built = deserialize(model, dct, pass_through=lambda _: True)
+        except ValidationError as exc:
+            raise ConfigurationError(exc.errors) from None
         self.base = dct
         self.version = self.registry.version
 
@@ -192,6 +195,7 @@ def gifnoc(
     argv=None,
     write_back_environ=True,
     set_global=True,
+    exit_on_error=None,
 ):
     """Context manager to find/assemble configuration for the code within.
 
@@ -229,65 +233,74 @@ def gifnoc(
     """
     global global_configuration
 
-    if parse_args:
-        if argparser is None:
-            argparser = ArgumentParser()
-        if config_argument:
-            argparser.add_argument(
-                config_argument,
-                dest="config",
-                metavar="CONFIG",
-                action="append",
-                help="Configuration file(s) to load.",
-            )
+    try:
+        if parse_args:
+            if exit_on_error is None:
+                exit_on_error = True
+            if argparser is None:
+                argparser = ArgumentParser()
+            if config_argument:
+                argparser.add_argument(
+                    config_argument,
+                    dest="config",
+                    metavar="CONFIG",
+                    action="append",
+                    help="Configuration file(s) to load.",
+                )
 
-        model = registry.model()
-        for opt, path in option_map.items():
-            main, *aliases = opt.split(",")
-            typ, hlp = type_at_path(model, path.split("."))
-            if isinstance(typ, UnionType):
-                typ = typ.__args__[0]
-            create_arg[typ, Info](
-                typ, Info(argparser=argparser, help=hlp, opt=main, aliases=aliases)
-            )
+            model = registry.model()
+            for opt, path in option_map.items():
+                main, *aliases = opt.split(",")
+                typ, hlp = type_at_path(model, path.split("."))
+                if isinstance(typ, UnionType):
+                    typ = typ.__args__[0]
+                create_arg[typ, Info](
+                    typ, Info(argparser=argparser, help=hlp, opt=main, aliases=aliases)
+                )
 
-        options = argparser.parse_args(sys.argv[1:] if argv is None else argv)
-    else:
-        options = SimpleNamespace(config=[])
+            options = argparser.parse_args(sys.argv[1:] if argv is None else argv)
+        else:
+            options = SimpleNamespace(config=[])
 
-    if environ_map is None:
-        environ_map = registry.envmap
+        if environ_map is None:
+            environ_map = registry.envmap
 
-    from_env = environ.get(envvar, None)
-    from_env = from_env.split(",") if from_env else []
+        from_env = environ.get(envvar, None)
+        from_env = from_env.split(",") if from_env else []
 
-    sources = [
-        *from_env,
-        *sources,
-        *(options.config or []),
-        EnvironMap(environ=environ, map=environ_map),
-        OptionsMap(options=options, map=option_map),
-    ]
+        sources = [
+            *from_env,
+            *sources,
+            *(options.config or []),
+            EnvironMap(environ=environ, map=environ_map),
+            OptionsMap(options=options, map=option_map),
+        ]
 
-    container = Configuration(sources=sources, registry=registry)
-    with container as cfg:
-        if set_global:
-            old_global = global_configuration
-            global_configuration = container
-        try:
-            if write_back_environ:
-                for envvar, pth in environ_map.items():
-                    value = get_at_path(cfg, pth)
-                    if isinstance(value, str):
-                        environ[envvar] = value
-                    elif isinstance(value, bool):
-                        environ[envvar] = str(int(value))
-                    else:
-                        environ[envvar] = str(value)
-            if parse_args:
-                yield cfg, options
-            else:
-                yield cfg
-        finally:
+        container = Configuration(sources=sources, registry=registry)
+        with container as cfg:
             if set_global:
-                global_configuration = old_global
+                old_global = global_configuration
+                global_configuration = container
+            try:
+                if write_back_environ:
+                    for envvar, pth in environ_map.items():
+                        value = get_at_path(cfg, pth)
+                        if isinstance(value, str):
+                            environ[envvar] = value
+                        elif isinstance(value, bool):
+                            environ[envvar] = str(int(value))
+                        else:
+                            environ[envvar] = str(value)
+                if parse_args:
+                    yield cfg, options
+                else:
+                    yield cfg
+            finally:
+                if set_global:
+                    global_configuration = old_global
+
+    except ConfigurationError as exc:
+        if exit_on_error:
+            exit(f"\u001b[1m\u001b[31mAn error occurred\u001b[0m\n{exc}")
+        else:
+            raise

@@ -3,6 +3,19 @@ from dataclasses import fields, is_dataclass
 from .docstrings import get_attribute_docstrings
 
 
+class ConfigurationError(Exception):
+    def __init__(self, errors):
+        self.errors = errors
+
+    def __str__(self):
+        lines = ["Errors were found in the configuration:"]
+        for err in self.errors:
+            loc = ".".join(err["loc"])
+            message = err["err"]
+            lines.append(f"* At \u001b[1m\u001b[33m{loc}\u001b[0m: {message}")
+        return "\n".join(lines)
+
+
 class Named:
     """A named object.
     This class can be used to construct objects with a name that will be used
