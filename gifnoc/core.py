@@ -47,7 +47,7 @@ class Configuration:
         self._model = model = self.registry.model()
         dct = parse_sources(model, *self.sources)
         dct = {f.name: dct[f.name] for f in fields(model) if f.name in dct}
-        self._built = deserialize(model, dct)
+        self._built = deserialize(model, dct, pass_through=lambda _: True)
         self.base = dct
         self.version = self.registry.version
 
