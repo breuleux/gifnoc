@@ -7,7 +7,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, fields
 from pathlib import Path
 from types import SimpleNamespace, UnionType
-from typing import Union
+from typing import Any, Union
 
 from apischema import ValidationError, deserialize
 from ovld import ovld
@@ -48,7 +48,7 @@ class Configuration:
         dct = parse_sources(model, *self.sources)
         dct = {f.name: dct[f.name] for f in fields(model) if f.name in dct}
         try:
-            self._built = deserialize(model, dct, pass_through=lambda _: True)
+            self._built = deserialize(model, dct, pass_through=lambda x: x is not Any)
         except ValidationError as exc:
             raise ConfigurationError(exc.errors) from None
         self.base = dct
