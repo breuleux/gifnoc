@@ -1,10 +1,12 @@
 from dataclasses import dataclass
+from typing import Callable, Optional
 
 
 @dataclass
 class RegisteredConfig:
     key: str
     cls: type
+    default_factory: Optional[Callable[[], object]]
 
 
 class Registry:
@@ -13,11 +15,12 @@ class Registry:
         self.envmap = {}
         self.version = 0
 
-    def register(self, key, cls=None):
+    def register(self, key, cls=None, default_factory=None):
         def reg(cls):
             self.models[key] = RegisteredConfig(
                 key=key,
                 cls=cls,
+                default_factory=default_factory,
             )
             self.version += 1
 
@@ -33,6 +36,9 @@ class Registry:
                 (),
                 {
                     "__annotations__": {k: v.cls for k, v in self.models.items()},
+                    "__factories__": {
+                        k: v.default_factory for k, v in self.models.items()
+                    },
                     **{k: None for k, _ in self.models.items()},
                 },
             )

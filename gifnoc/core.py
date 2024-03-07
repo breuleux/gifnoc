@@ -82,8 +82,9 @@ class Configuration:
         self._token = None
 
 
-global_configuration = None
-active_configuration = ContextVar("active_configuration", default=None)
+empty_configuration = Configuration(sources=[], registry=global_registry)
+global_configuration = empty_configuration
+active_configuration = ContextVar("active_configuration", default=empty_configuration)
 
 
 def current_configuration():
