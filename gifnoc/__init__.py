@@ -17,3 +17,4 @@ from .registry import (  # noqa: F401
     map_environment_variables,
     register,
 )
+from .type_wrappers import TaggedSubclass  # noqa: F401
