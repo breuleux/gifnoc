@@ -10,7 +10,7 @@ class ConfigurationError(Exception):
     def __str__(self):
         lines = ["Errors were found in the configuration:"]
         for err in self.errors:
-            loc = ".".join(err["loc"])
+            loc = ".".join(map(str, err["loc"]))
             message = err["err"]
             lines.append(f"* At \u001b[1m\u001b[33m{loc}\u001b[0m: {message}")
         return "\n".join(lines)
