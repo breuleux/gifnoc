@@ -59,6 +59,8 @@ def type_at_path(model, path):
     omodel = model
     opath = path
     for entry in path:
+        model = getattr(model, "__passthrough__", model)
+
         doc = None
         origin = getattr(model, "__origin__", model)
         if issubclass(origin, dict):

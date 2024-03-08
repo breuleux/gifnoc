@@ -11,6 +11,10 @@ def is_structure(cls):
     return issubclass(cls, dict) or issubclass(cls, list) or is_dataclass(cls)
 
 
+def is_passthrough(cls):
+    return hasattr(cls, "__passthrough__")
+
+
 @ovld
 def _acquire(model: meta(is_dataclass), d: dict, context: Context):
     d = dict(d)
@@ -76,6 +80,11 @@ def _acquire(model: meta(is_structure), p: Path, context: FileContext):
 @ovld
 def _acquire(model: meta(is_structure), s: str, context: FileContext):
     return acquire(model, Path(s), context)
+
+
+@ovld
+def _acquire(model: meta(is_passthrough), x: object, context: Context):
+    return acquire(model.__passthrough__, x, context)
 
 
 @ovld

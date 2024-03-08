@@ -15,7 +15,7 @@ class _TaggedSubclass:
             typ = type(
                 f"TaggedSubclass[{item.__name__}]",
                 (TaggedSubclass,),
-                {"wrapped_class": item},
+                {"__passthrough__": item},
             )
             TaggedSubclass._cache[item] = typ
             deserializer(Conversion(typ._deserialize, source=dict, target=typ))
@@ -23,7 +23,7 @@ class _TaggedSubclass:
 
     @classmethod
     def _deserialize(cls, data: dict):
-        base = cls.wrapped_class
+        base = cls.__passthrough__
 
         data = {**data}
         cls_name = data.pop("class", None)
