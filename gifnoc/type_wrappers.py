@@ -41,7 +41,8 @@ class _TaggedSubclass:
         for sc in [base, *base.__subclasses__()]:
             sc_mod = sc.__module__
             sc_name = sc.__name__
-            sch = deserialization_schema(sc)
+            sch = dict(deserialization_schema(sc))
+            sch.pop("$schema", None)
             sch.setdefault("properties", {})["class"] = {
                 "title": "Class",
                 "description": "Reference to the class to instantiate",
