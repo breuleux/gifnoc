@@ -29,17 +29,12 @@ class _TaggedSubclass:
             deserializer(
                 Conversion(typ._deserialize, source=dict[str, Any], target=typ)
             )
-
-            possibilities = typ.make_schema()
-            if len(possibilities) == 1:
-                schema(extra=possibilities[0])(typ)
-            else:
-                schema(extra={"oneOf": possibilities})(typ)
+            typ.register_schemas()
 
         return TaggedSubclass._cache[item]
 
     @classmethod
-    def make_schema(cls):
+    def register_schemas(cls):
         base = cls.__passthrough__
         possibilities = []
         base_mod = base.__module__
@@ -54,7 +49,10 @@ class _TaggedSubclass:
             possibilities.append(sch)
             if sc is not base:
                 sch.setdefault("required", []).append("class")
-        return possibilities
+        if len(possibilities) == 1:
+            schema(extra=possibilities[0])(cls)
+        else:
+            schema(extra={"oneOf": possibilities})(cls)
 
     @classmethod
     def _deserialize(cls, data: dict):

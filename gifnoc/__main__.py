@@ -4,13 +4,36 @@ import os
 from importlib import import_module
 
 from apischema import serialize
-from apischema.json_schema import deserialization_schema
-
-from gifnoc.utils import get_at_path
 
 from .core import use
 from .parse import EnvironMap, extensions
 from .registry import global_registry
+from .schema import deserialization_schema
+from .utils import get_at_path, type_at_path
+
+
+def command_dump(options, sources):
+    with use(*sources()) as cfg:
+        if options.SUBPATH:
+            cfg = get_at_path(cfg, options.SUBPATH.split("."))
+        ser = serialize(cfg)
+        if options.format == "raw":
+            print(ser)
+        else:
+            fmt = f".{options.format}"
+            if fmt not in extensions:
+                exit(f"Cannot dump to '{options.format}' format")
+            else:
+                print(extensions[fmt].dump(ser))
+
+
+def command_schema(options, sources):
+    with use(*sources(require=False)) as cfg:
+        cfg_type = type(cfg)
+        if options.SUBPATH:
+            cfg_type, _ = type_at_path(cfg_type, options.SUBPATH.split("."))
+        schema = deserialization_schema(cfg_type)
+        print(json.dumps(schema, indent=4))
 
 
 def main():
@@ -46,6 +69,9 @@ def main():
     dump.add_argument("--format", "-f", help="Dump format", default="raw")
 
     schema = subparsers.add_parser("schema", help="Dump JSON schema.")
+    schema.add_argument(
+        "SUBPATH", help="Subpath to get a schema for", nargs="?", default=None
+    )
 
     options = parser.parse_args()
 
@@ -63,37 +89,24 @@ def main():
     for modpath in modules:
         import_module(modpath)
 
-    if options.ignore_env:
-        from_env = []
-    else:
-        from_env = os.environ.get("GIFNOC_FILE", None)
-        from_env = from_env.split(",") if from_env else []
-
-    sources = [*from_env, *options.config]
-    if not options.ignore_env:
-        sources.append(EnvironMap(environ=os.environ, map=global_registry.envmap))
-
-    if not sources:
-        exit("Please provide at least one config source.")
-
-    with use(*sources) as cfg:
-        if options.command == "dump":
-            if options.SUBPATH:
-                cfg = get_at_path(cfg, options.SUBPATH.split("."))
-            ser = serialize(cfg)
-            if options.format == "raw":
-                print(ser)
-            else:
-                fmt = f".{options.format}"
-                if fmt not in extensions:
-                    exit(f"Cannot dump to '{options.format}' format")
-                else:
-                    print(extensions[fmt].dump(ser))
-        elif options.command == "schema":
-            schema = deserialization_schema(type(cfg))
-            print(json.dumps(schema, indent=4))
+    def build_sources(require=True):
+        if options.ignore_env:
+            from_env = []
         else:
-            exit(f"Unsupported command: {options.command}")
+            from_env = os.environ.get("GIFNOC_FILE", None)
+            from_env = from_env.split(",") if from_env else []
+
+        sources = [*from_env, *options.config]
+        if not options.ignore_env:
+            sources.append(EnvironMap(environ=os.environ, map=global_registry.envmap))
+
+        if not sources and require:
+            exit("Please provide at least one config source.")
+
+        return sources
+
+    command = globals()[f"command_{options.command}"]
+    command(options, build_sources)
 
 
 if __name__ == "__main__":
