@@ -43,8 +43,9 @@ class _TaggedSubclass:
             sc_name = sc.__name__
             sch = deserialization_schema(sc)
             sch.setdefault("properties", {})["class"] = {
-                "enum": [f"{sc_mod}:{sc_name}"]
-                + ([sc_name] if sc_mod == base_mod else []),
+                "title": "Class",
+                "description": "Reference to the class to instantiate",
+                "enum": [sc_name if sc_mod == base_mod else f"{sc_mod}:{sc_name}"],
             }
             possibilities.append(sch)
             if sc is not base:
