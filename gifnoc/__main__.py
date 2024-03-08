@@ -1,8 +1,10 @@
 import argparse
+import json
 import os
 from importlib import import_module
 
 from apischema import serialize
+from apischema.json_schema import deserialization_schema
 
 from gifnoc.utils import get_at_path
 
@@ -42,6 +44,8 @@ def main():
     dump = subparsers.add_parser("dump", help="Dump configuration.")
     dump.add_argument("SUBPATH", help="Subpath to dump", nargs="?", default=None)
     dump.add_argument("--format", "-f", help="Dump format", default="raw")
+
+    schema = subparsers.add_parser("schema", help="Dump JSON schema.")
 
     options = parser.parse_args()
 
@@ -85,6 +89,9 @@ def main():
                     exit(f"Cannot dump to '{options.format}' format")
                 else:
                     print(extensions[fmt].dump(ser))
+        elif options.command == "schema":
+            schema = deserialization_schema(type(cfg))
+            print(json.dumps(schema, indent=4))
         else:
             exit(f"Unsupported command: {options.command}")
 

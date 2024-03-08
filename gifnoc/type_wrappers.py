@@ -1,8 +1,16 @@
 import importlib
-from typing import TYPE_CHECKING, Annotated, Type, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Type, TypeVar
 
-from apischema import ValidationError, deserialize, deserializer, serialize, serializer
+from apischema import (
+    ValidationError,
+    deserialize,
+    deserializer,
+    schema,
+    serialize,
+    serializer,
+)
 from apischema.conversions import Conversion
+from apischema.json_schema import deserialization_schema
 
 T = TypeVar("T")
 
@@ -18,8 +26,35 @@ class _TaggedSubclass:
                 {"__passthrough__": item},
             )
             TaggedSubclass._cache[item] = typ
-            deserializer(Conversion(typ._deserialize, source=dict, target=typ))
+            deserializer(
+                Conversion(typ._deserialize, source=dict[str, Any], target=typ)
+            )
+
+            possibilities = typ.make_schema()
+            if len(possibilities) == 1:
+                schema(extra=possibilities[0])(typ)
+            else:
+                schema(extra={"oneOf": possibilities})(typ)
+
         return TaggedSubclass._cache[item]
+
+    @classmethod
+    def make_schema(cls):
+        base = cls.__passthrough__
+        possibilities = []
+        base_mod = base.__module__
+        for sc in [base, *base.__subclasses__()]:
+            sc_mod = sc.__module__
+            sc_name = sc.__name__
+            sch = deserialization_schema(sc)
+            sch.setdefault("properties", {})["class"] = {
+                "enum": [f"{sc_mod}:{sc_name}"]
+                + ([sc_name] if sc_mod == base_mod else []),
+            }
+            possibilities.append(sch)
+            if sc is not base:
+                sch.setdefault("required", []).append("class")
+        return possibilities
 
     @classmethod
     def _deserialize(cls, data: dict):
