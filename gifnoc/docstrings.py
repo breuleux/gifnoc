@@ -93,6 +93,9 @@ def scrape_variables_and_docstrings(src: str):
     return visitor.data
 
 
+_cached_docstrings = {}
+
+
 def get_attribute_docstrings(cls):
     """Get the docstrings for individual attributes of a class.
 
@@ -103,6 +106,8 @@ def get_attribute_docstrings(cls):
         A dict from variable name to its associated docstring (after itself) and/or
         comment (above itself).
     """
+    if cls in _cached_docstrings:
+        return _cached_docstrings[cls]
     docs = {}
     current = None
     current_line = None
@@ -130,4 +135,5 @@ def get_attribute_docstrings(cls):
         elif kind == "OTHER":
             current = current_line = None
             for_next = []
-    return {k: "\n".join(lines) for k, lines in docs.items()}
+    rval = _cached_docstrings[cls] = {k: "\n".join(lines) for k, lines in docs.items()}
+    return rval
