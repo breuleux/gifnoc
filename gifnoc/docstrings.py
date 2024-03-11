@@ -114,7 +114,7 @@ def get_attribute_docstrings(cls):
     for_next = []
     try:
         src = dedent(inspect.getsource(cls))
-    except OSError:
+    except (OSError, TypeError):
         return {}
     # We concatenate comment tokens from the tokenizer with
     # variable/docstring tokens extracted using the ast module

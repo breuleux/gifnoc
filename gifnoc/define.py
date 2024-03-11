@@ -1,6 +1,6 @@
 from typing import Optional, Type, TypeVar
 
-from . import config
+from .config import _Proxy
 from .registry import (
     map_environment_variables,
     register,
@@ -17,4 +17,4 @@ def define(
     register(field, model, default_factory=default_factory)
     if environ:
         map_environment_variables(**{k: f"{field}.{v}" for k, v in environ.items()})
-    return getattr(config, field)
+    return _Proxy(*field.split("."))

@@ -23,7 +23,7 @@ class _TaggedSubclass:
             typ = type(
                 f"TaggedSubclass[{item.__name__}]",
                 (TaggedSubclass,),
-                {"__passthrough__": item},
+                {"__passthrough__": item, "__wrapper__": _TaggedSubclass},
             )
             TaggedSubclass._cache[item] = typ
             deserializer(
