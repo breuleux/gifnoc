@@ -183,7 +183,7 @@ def create_arg(model: Union[int, float, str, Path], info: Info):  # noqa: F811
 
 
 @contextmanager
-def gifnoc(
+def cli(
     envvar="GIFNOC_FILE",
     config_argument="--config",
     sources=[],

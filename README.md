@@ -46,7 +46,7 @@ server_config = gifnoc.define(
 )
 
 if __name__ == "__main__":
-    with gifnoc.gifnoc(
+    with gifnoc.cli(
         # Environment variable for the configuration path (defaults to GIFNOC_FILE)
         envvar="APP_CONFIG",
         # Command-line argument for the configuration path (can give multiple)
