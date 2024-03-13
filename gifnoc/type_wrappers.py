@@ -1,4 +1,5 @@
 import importlib
+from collections import deque
 from typing import TYPE_CHECKING, Annotated, Any, Type, TypeVar
 
 from apischema import (
@@ -38,7 +39,10 @@ class _TaggedSubclass:
         base = cls.__passthrough__
         possibilities = []
         base_mod = base.__module__
-        for sc in [base, *base.__subclasses__()]:
+        queue = deque([base])
+        while queue:
+            sc = queue.popleft()
+            queue.extend(sc.__subclasses__())
             sc_mod = sc.__module__
             sc_name = sc.__name__
             sch = dict(deserialization_schema(sc))
