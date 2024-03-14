@@ -96,7 +96,7 @@ def scrape_variables_and_docstrings(src: str):
 _cached_docstrings = {}
 
 
-def get_attribute_docstrings(cls):
+def _get_attribute_docstrings(cls):
     """Get the docstrings for individual attributes of a class.
 
     Arguments:
@@ -137,3 +137,10 @@ def get_attribute_docstrings(cls):
             for_next = []
     rval = _cached_docstrings[cls] = {k: "\n".join(lines) for k, lines in docs.items()}
     return rval
+
+
+def get_attribute_docstrings(cls):
+    results = {}
+    for subcls in cls.mro():
+        results.update(_get_attribute_docstrings(subcls))
+    return results
