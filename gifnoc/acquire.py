@@ -1,10 +1,10 @@
 from dataclasses import fields, is_dataclass
 from pathlib import Path
-from types import UnionType
 
 from ovld import meta, ovld
 
 from .parse import Context, EnvContext, FileContext, parse_file
+from .utils import UnionTypes
 
 
 def is_structure(cls):
@@ -121,7 +121,7 @@ def _acquire(model: object, obj: object, context: Context):
 
 
 def acquire(model, obj, context):
-    if isinstance(model, UnionType):
+    if isinstance(model, UnionTypes):
         model, *_ = model.__args__
     method = _acquire[getattr(model, "__origin__", model), type(obj), type(context)]
     return method(model, obj, context)

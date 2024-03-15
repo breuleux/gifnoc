@@ -1,6 +1,15 @@
 from dataclasses import fields, is_dataclass
+from typing import Union
 
 from .docstrings import get_attribute_docstrings
+
+try:
+    from types import UnionType
+
+    UnionTypes = (type(Union[int, str]), UnionType)
+
+except ImportError:
+    UnionTypes = (type(Union[int, str]),)
 
 
 class ConfigurationError(Exception):

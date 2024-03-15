@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, fields
 from pathlib import Path
-from types import SimpleNamespace, UnionType
+from types import SimpleNamespace
 from typing import Any, Union
 
 from apischema import ValidationError, deserialize
@@ -16,7 +16,7 @@ from .acquire import acquire
 from .merge import merge
 from .parse import EnvironMap, OptionsMap, parse_source
 from .registry import global_registry
-from .utils import ConfigurationError, get_at_path, type_at_path
+from .utils import ConfigurationError, UnionTypes, get_at_path, type_at_path
 
 
 class Configuration:
@@ -253,7 +253,7 @@ def cli(
             for opt, path in option_map.items():
                 main, *aliases = opt.split(",")
                 typ, hlp = type_at_path(model, path.split("."))
-                if isinstance(typ, UnionType):
+                if isinstance(typ, UnionTypes):
                     typ = typ.__args__[0]
                 create_arg[typ, Info](
                     typ, Info(argparser=argparser, help=hlp, opt=main, aliases=aliases)
