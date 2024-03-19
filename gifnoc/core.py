@@ -266,8 +266,12 @@ def cli(
         if environ_map is None:
             environ_map = registry.envmap
 
-        from_env = environ.get(envvar, None)
-        from_env = from_env.split(",") if from_env else []
+        envvars = [envvar] if isinstance(envvar, str) else envvar
+
+        from_env = []
+        for ev in envvars:
+            if env_files := environ.get(ev, None):
+                from_env.extend(env_files.split(","))
 
         sources = [
             *from_env,
