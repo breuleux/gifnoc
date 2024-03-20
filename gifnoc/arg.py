@@ -1,6 +1,8 @@
 import argparse
 from dataclasses import dataclass, field, fields, is_dataclass, replace
+from datetime import date, datetime
 from pathlib import Path
+from types import GenericAlias
 from typing import Union
 
 from ovld import ovld
@@ -11,7 +13,7 @@ from gifnoc.utils import ConfigurationError, type_at_path
 
 @dataclass
 class Option:
-    option: str
+    option: str = None
     aliases: list[str] = field(default_factory=list)
     action: object = None
     metavar: str = None
@@ -37,11 +39,19 @@ def compile_option(model: bool, path: str, option: Option):
 
 
 @ovld
+def compile_option(model: date, path: str, option: Option):  # noqa: F811
+    option.type = lambda d: datetime.strptime(d, "%Y-%m-%d").date()
+    return option
+
+
+@ovld
 def compile_option(model: object, path: str, option: Option):  # noqa: F811
-    if option.type is None:
+    if isinstance(model, GenericAlias):
+        assert model.__origin__ is list
+        option.action = "append"
+        option.type = model.__args__[0]
+    elif option.type is None:
         option.type = model
-    if option.metavar is None:
-        option.metavar = option.option.strip("-").upper()
     return option
 
 
@@ -62,7 +72,9 @@ def auto(model, mount, prefix=""):
     for fld in fields(model):
         name = fld.name.replace("_", "-")
         mounted = f"{mount}.{fld.name}"
-        if issubclass(fld.type, (str, int, float, bool, Path)):
+        if issubclass(fld.type, (str, int, float, bool, date, Path)):
+            options[mounted] = Option(f"--{prefix}{name}")
+        elif isinstance(fld.type, GenericAlias) and fld.type.__origin__ is list:
             options[mounted] = Option(f"--{prefix}{name}")
         elif is_dataclass(fld.type):
             options.update(auto(fld.type, mounted, prefix=f"{prefix}{name}."))
@@ -90,9 +102,26 @@ def compile_command(global_model, path, command):
             opt.help = doc
         return ap, opt
 
-    options = dict(command.options)
+    def _merge(opts1, opts2):
+        results = {abspath(mount, p): v for p, v in opts1.items()}
+        opts2 = {abspath(mount, p): v for p, v in opts2.items()}
+        for k, v in opts2.items():
+            if k in results:
+                v = replace(
+                    results[k],
+                    **{
+                        key: value
+                        for key, value in vars(v).items()
+                        if value is not None
+                    },
+                )
+            results[k] = v
+        return results
+
+    options = {}
     if command.auto:
         options.update(auto(model, mount))
+    options = _merge(options, command.options)
     options = dict(_compile_option(p, v) for p, v in options.items())
 
     commands = {
@@ -150,8 +179,10 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser, command: Command):
 def add_arguments_to_parser(  # noqa: F811
     parser: argparse.ArgumentParser, option: Option
 ):
+    if option.metavar is None and option.option is not None:
+        option.metavar = option.option.strip("-").upper()
     parser.add_argument(
-        option.option,
+        *([option.option] if option.option else []),
         *option.aliases,
         action=option.action,
         metavar=option.metavar,
