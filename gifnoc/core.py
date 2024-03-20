@@ -1,22 +1,20 @@
-import argparse
 import os
 import sys
 from argparse import ArgumentParser
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass, fields
-from pathlib import Path
+from dataclasses import fields
 from types import SimpleNamespace
-from typing import Any, Union
+from typing import Any
 
 from apischema import ValidationError, deserialize
-from ovld import ovld
 
 from .acquire import acquire
+from .arg import Command, add_arguments_to_parser, compile_command
 from .merge import merge
 from .parse import EnvironMap, OptionsMap, parse_source
 from .registry import global_registry
-from .utils import ConfigurationError, UnionTypes, get_at_path, type_at_path
+from .utils import ConfigurationError, get_at_path
 
 
 class Configuration:
@@ -149,46 +147,13 @@ def load_global(*sources, registry=global_registry):
     return container.built
 
 
-@dataclass
-class Info:
-    """Holds information for the create_arg function."""
-
-    argparser: ArgumentParser
-    opt: str
-    help: str | None
-    aliases: list
-
-
-@ovld
-def create_arg(model: bool, info: Info):
-    info.argparser.add_argument(
-        info.opt,
-        *info.aliases,
-        action=argparse.BooleanOptionalAction,
-        dest=info.opt,
-        help=info.help,
-    )
-
-
-@ovld
-def create_arg(model: Union[int, float, str, Path], info: Info):  # noqa: F811
-    info.argparser.add_argument(
-        info.opt,
-        *info.aliases,
-        type=model,
-        dest=info.opt,
-        metavar=info.opt.strip("-").upper(),
-        help=info.help,
-    )
-
-
 @contextmanager
 def cli(
     envvar="GIFNOC_FILE",
     config_argument="--config",
     sources=[],
     registry=global_registry,
-    option_map={},
+    options={},
     environ_map=None,
     environ=os.environ,
     argparser=None,
@@ -250,18 +215,23 @@ def cli(
                 )
 
             model = registry.model()
-            for opt, path in option_map.items():
-                main, *aliases = opt.split(",")
-                typ, hlp = type_at_path(model, path.split("."))
-                if isinstance(typ, UnionTypes):
-                    typ = typ.__args__[0]
-                create_arg[typ, Info](
-                    typ, Info(argparser=argparser, help=hlp, opt=main, aliases=aliases)
+            if isinstance(options, dict) or options is None:
+                command = Command(mount="", options=options)
+            elif isinstance(options, str):
+                command = Command(mount=options, auto=True)
+            elif not isinstance(options, Command):
+                raise TypeError(
+                    "options argument to cli() should be a dict or a Command"
                 )
+            else:
+                command = options
 
-            options = argparser.parse_args(sys.argv[1:] if argv is None else argv)
+            command = compile_command(model, "", command)
+            add_arguments_to_parser(argparser, command)
+
+            parsed = argparser.parse_args(sys.argv[1:] if argv is None else argv)
         else:
-            options = SimpleNamespace(config=[])
+            parsed = SimpleNamespace(config=[])
 
         if environ_map is None:
             environ_map = registry.envmap
@@ -276,9 +246,9 @@ def cli(
         sources = [
             *from_env,
             *sources,
-            *(options.config or []),
+            *(parsed.config or []),
             EnvironMap(environ=environ, map=environ_map),
-            OptionsMap(options=options, map=option_map),
+            OptionsMap(options=parsed),
         ]
 
         container = Configuration(sources=sources, registry=registry)
@@ -297,7 +267,7 @@ def cli(
                         else:
                             environ[envvar] = str(value)
                 if parse_args:
-                    yield cfg, options
+                    yield cfg, parsed
                 else:
                     yield cfg
             finally:

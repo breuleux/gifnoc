@@ -13,11 +13,15 @@ except ImportError:
 
 
 class ConfigurationError(Exception):
-    def __init__(self, errors):
+    def __init__(self, errors, is_definition_problem=False):
         self.errors = errors
+        self.is_definition_problem = is_definition_problem
 
     def __str__(self):
-        lines = ["Errors were found in the configuration:"]
+        if self.is_definition_problem:
+            lines = ["Errors were found in the definition of the configuration:"]
+        else:
+            lines = ["Errors were found in the configuration:"]
         for err in self.errors:
             loc = ".".join(map(str, err["loc"]))
             message = err["err"]
@@ -57,7 +61,7 @@ class MissingProxy:
         raise self._error
 
 
-def type_at_path(model, path):
+def type_at_path(model, path, allow_union=True):
     """Get the type at a given path from the given configuration model.
 
     Argument:
@@ -91,10 +95,17 @@ def type_at_path(model, path):
                     doc = docs.get(entry, None)
                     break
             else:
-                raise TypeError(f"Cannot resolve type at `{opath}` from `{omodel}`")
+                raise TypeError(
+                    f"Cannot resolve type at `{opath}` from `{omodel}`, blocked at type `{model.__qualname__}`"
+                )
 
         else:
-            raise TypeError(f"Cannot resolve type at `{opath}` from `{omodel}`")
+            raise TypeError(
+                f"Cannot resolve type at `{opath}` from `{omodel}`, blocked at type `{model.__qualname__}` (`{model.__qualname__}` is not a dataclass)"
+            )
+
+    if not allow_union and isinstance(model, UnionTypes):
+        model = model.__args__[0]
 
     return model, doc
 

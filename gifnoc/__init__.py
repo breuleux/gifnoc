@@ -1,9 +1,12 @@
 from . import config  # noqa: F401
+from .arg import (  # noqa: F401
+    Command,
+    Option,
+)
 from .core import (  # noqa: F401
     Configuration,
     active_configuration,
     cli,
-    cli as gifnoc,
     current_configuration,
     get,
     is_loaded,

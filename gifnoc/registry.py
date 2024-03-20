@@ -64,7 +64,7 @@ class Registry:
         def reg(hierarchy, path, key, cls):
             root, *rest = key.split(".", 1)
             rest = rest[0] if rest else None
-            path.append(key)
+            path = [*path, root]
 
             if root not in hierarchy.extras:
                 hierarchy.extras[root] = RegisteredConfig(

@@ -36,7 +36,6 @@ class OptionsMap:
     """Command-line options associated with a map from options to configuration paths."""
 
     options: Namespace
-    map: dict[str, str]
 
 
 @dataclass
@@ -140,15 +139,12 @@ def parse_source(source: EnvironMap):  # noqa: F811
 def parse_source(source: OptionsMap):  # noqa: F811
     """Parse command-line options based on a map."""
     rval = {}
-    for k, pth in source.map.items():
-        k, *_ = k.split(",")
-        if isinstance(pth, str):
-            pth = pth.split(".")
-        if k in source.options:
-            current = rval
-            for part in pth[:-1]:
-                current = current.setdefault(part, {})
-            value = getattr(source.options, k)
-            if value is not None:
-                current[pth[-1]] = value
+    for pth, value in vars(source.options).items():
+        if not pth.startswith("&") or value is None:
+            continue
+        pth = pth[1:].split(".")
+        current = rval
+        for part in pth[:-1]:
+            current = current.setdefault(part, {})
+        current[pth[-1]] = value
     yield (Context(), rval)
