@@ -4,6 +4,7 @@ from typing import Callable, Optional
 
 
 def get_default_factory(cls, default_factory=None):
+    cls = getattr(cls, "__passthrough__", cls)
     if default_factory is None and is_dataclass(cls):
         if all(
             field.default is not MISSING or field.default_factory is not MISSING
