@@ -60,11 +60,12 @@ def abspath(path, mount):
 def auto(model, mount, prefix=""):
     options = {}
     for fld in fields(model):
-        mounted = f"{mount}.{fld.name}"
+        name = fld.name.replace("_", "-")
+        mounted = f"{mount}.{name}"
         if issubclass(fld.type, (str, int, float, bool, Path)):
-            options[mounted] = Option(f"--{prefix}{fld.name}")
+            options[mounted] = Option(f"--{prefix}{name}")
         elif is_dataclass(fld.type):
-            options.update(auto(fld.type, mounted, prefix=f"{fld.name}."))
+            options.update(auto(fld.type, mounted, prefix=f"{prefix}{name}."))
         else:
             pass
     return options
@@ -146,7 +147,9 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser, command: Command):
 
 
 @ovld
-def add_arguments_to_parser(parser: argparse.ArgumentParser, option: Option):  # noqa: F811
+def add_arguments_to_parser(  # noqa: F811
+    parser: argparse.ArgumentParser, option: Option
+):
     parser.add_argument(
         option.option,
         *option.aliases,
@@ -160,7 +163,9 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser, option: Option):  #
 
 
 @ovld
-def add_arguments_to_parser(parser: argparse.ArgumentParser, options: dict):  # noqa: F811
+def add_arguments_to_parser(  # noqa: F811
+    parser: argparse.ArgumentParser, options: dict
+):
     add_arguments_to_parser(parser, Command(mount="", options=options))
 
 
