@@ -19,13 +19,7 @@ class _Proxy:
                 if isinstance(cfg, dict):
                     cfg = cfg[k]
                 else:
-                    nxt = getattr(cfg, k)
-                    if nxt is None and (
-                        factory := getattr(cfg, "__factories__", {}).get(k, None)
-                    ):
-                        nxt = factory()
-                        setattr(cfg, k, nxt)
-                    cfg = nxt
+                    cfg = getattr(cfg, k)
             if cfg is None:
                 key = ".".join(self._pth)
                 raise Exception(f"No configuration was loaded for key '{key}'.")

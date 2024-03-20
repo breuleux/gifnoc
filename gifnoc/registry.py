@@ -3,6 +3,16 @@ from functools import partial
 from typing import Callable, Optional
 
 
+def get_default_factory(cls, default_factory=None):
+    if default_factory is None and is_dataclass(cls):
+        if all(
+            field.default is not MISSING or field.default_factory is not MISSING
+            for field in fields(cls)
+        ):
+            default_factory = cls
+        return default_factory or (lambda: None)
+
+
 @dataclass
 class RegisteredConfig:
     path: str
@@ -17,16 +27,6 @@ class RegisteredConfig:
             self.wrapper = self.cls.__wrapper__
             self.cls = self.cls.__passthrough__
 
-        if self.default_factory is None and is_dataclass(self.cls):
-            if all(
-                field.default is not MISSING or field.default_factory is not MISSING
-                for field in fields(self.cls)
-            ):
-                self.default_factory = self.cls
-
-        if self.default_factory is None:
-            self.default_factory = lambda: None
-
     def build(self):
         if not self.extras:
             dc = self.cls
@@ -35,7 +35,15 @@ class RegisteredConfig:
                 cls_name=self.path,
                 bases=(self.cls,),
                 fields=[
-                    (name, cfg.build(), field(default_factory=self.default_factory))
+                    (
+                        name,
+                        built := cfg.build(),
+                        field(
+                            default_factory=get_default_factory(
+                                built, cfg.default_factory
+                            )
+                        ),
+                    )
                     for name, cfg in self.extras.items()
                 ],
             )
