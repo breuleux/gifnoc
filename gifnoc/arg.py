@@ -27,6 +27,7 @@ class Command:
     mount: str = None
     auto: bool = False
     help: str = None
+    command_field: str = "command"
     commands: dict[str, Union[str, "Command"]] = field(default_factory=dict)
     options: dict[str, Union[str, Option]] = field(default_factory=dict)
 
@@ -145,7 +146,7 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser, command: Command):
         add_arguments_to_parser(parser, option)
     if command.commands:
         global_model = global_registry.model()
-        dest = f"&{command.mount}.command"
+        dest = f"&{command.mount}.{command.command_field}"
         path = dest[1:].split(".")
         try:
             holder_type, doc = type_at_path(model=global_model, path=path)
@@ -169,7 +170,9 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser, command: Command):
                 ],
                 is_definition_problem=True,
             )
-        subparsers = parser.add_subparsers(required=True, dest=dest, help=doc)
+        subparsers = parser.add_subparsers(
+            required=True, dest=dest, help=doc, metavar=command.command_field.upper()
+        )
         for command_name, subcmd in command.commands.items():
             subparser = subparsers.add_parser(command_name, help=subcmd.help)
             add_arguments_to_parser(subparser, subcmd)
