@@ -61,7 +61,7 @@ def auto(model, mount, prefix=""):
     options = {}
     for fld in fields(model):
         name = fld.name.replace("_", "-")
-        mounted = f"{mount}.{name}"
+        mounted = f"{mount}.{fld.name}"
         if issubclass(fld.type, (str, int, float, bool, Path)):
             options[mounted] = Option(f"--{prefix}{name}")
         elif is_dataclass(fld.type):
