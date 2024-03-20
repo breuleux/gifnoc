@@ -1,6 +1,8 @@
 from dataclasses import fields, is_dataclass
 from pathlib import Path
 
+from apischema.conversions.converters import default_deserialization
+from apischema.conversions.utils import converter_types
 from ovld import meta, ovld
 
 from .parse import Context, EnvContext, FileContext, parse_file
@@ -77,9 +79,18 @@ def _acquire(model: meta(is_structure), p: Path, context: FileContext):
     return acquire(model, parse_file(p), FileContext(path=p.parent))
 
 
+def convertible_from_string(typ):
+    return any(
+        converter_types(ds, target=typ)[0] is str for ds in default_deserialization(typ)
+    )
+
+
 @ovld
 def _acquire(model: meta(is_structure), s: str, context: FileContext):
-    return acquire(model, Path(s), context)
+    if convertible_from_string(model):
+        return s
+    else:
+        return acquire(model, Path(s), context)
 
 
 @ovld

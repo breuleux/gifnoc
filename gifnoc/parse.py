@@ -86,6 +86,10 @@ def parse_file(file, parser=None):
         file: The file to parse.
         parser: The parser to use (default: based on file suffix)
     """
+    if not file.exists():
+        raise FileNotFoundError(
+            f"Trying to read subconfiguration from file '{file}', but it does not exist."
+        )
     if parser is None:
         sfx = file.suffix
         parser = extensions.get(sfx, None)
