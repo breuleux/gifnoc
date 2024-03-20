@@ -1,6 +1,9 @@
 from dataclasses import fields, is_dataclass
 from typing import Union
 
+from apischema.conversions.converters import default_deserialization
+from apischema.conversions.utils import converter_types
+
 from .docstrings import get_attribute_docstrings
 
 try:
@@ -130,3 +133,9 @@ def get_at_path(cfg, path):
         else:
             curr = getattr(curr, p)
     return curr
+
+
+def convertible_from_string(typ):
+    return any(
+        converter_types(ds, target=typ)[0] is str for ds in default_deserialization(typ)
+    )

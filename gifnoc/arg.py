@@ -1,14 +1,12 @@
 import argparse
 from dataclasses import dataclass, field, fields, is_dataclass, replace
-from datetime import date, datetime
-from pathlib import Path
 from types import GenericAlias
 from typing import Union
 
 from ovld import ovld
 
 from gifnoc.registry import global_registry
-from gifnoc.utils import ConfigurationError, type_at_path
+from gifnoc.utils import ConfigurationError, convertible_from_string, type_at_path
 
 
 @dataclass
@@ -40,19 +38,13 @@ def compile_option(model: bool, path: str, option: Option):
 
 
 @ovld
-def compile_option(model: date, path: str, option: Option):  # noqa: F811
-    option.type = lambda d: datetime.strptime(d, "%Y-%m-%d").date()
-    return option
-
-
-@ovld
 def compile_option(model: object, path: str, option: Option):  # noqa: F811
     if isinstance(model, GenericAlias):
         assert model.__origin__ is list
+        option = compile_option(model.__args__[0], path, option)
         option.action = "append"
-        option.type = model.__args__[0]
     elif option.type is None:
-        option.type = model
+        option.type = str
     return option
 
 
@@ -73,14 +65,10 @@ def auto(model, mount, prefix=""):
     for fld in fields(model):
         name = fld.name.replace("_", "-")
         mounted = f"{mount}.{fld.name}"
-        if issubclass(fld.type, (str, int, float, bool, date, Path)):
-            options[mounted] = Option(f"--{prefix}{name}")
-        elif isinstance(fld.type, GenericAlias) and fld.type.__origin__ is list:
-            options[mounted] = Option(f"--{prefix}{name}")
-        elif is_dataclass(fld.type):
+        if is_dataclass(fld.type) and not convertible_from_string(fld.type):
             options.update(auto(fld.type, mounted, prefix=f"{prefix}{name}."))
         else:
-            pass
+            options[mounted] = Option(f"--{prefix}{name}")
     return options
 
 

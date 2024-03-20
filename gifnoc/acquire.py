@@ -1,12 +1,10 @@
 from dataclasses import fields, is_dataclass
 from pathlib import Path
 
-from apischema.conversions.converters import default_deserialization
-from apischema.conversions.utils import converter_types
 from ovld import meta, ovld
 
 from .parse import Context, EnvContext, FileContext, parse_file
-from .utils import UnionTypes
+from .utils import UnionTypes, convertible_from_string
 
 
 def is_structure(cls):
@@ -77,12 +75,6 @@ def _acquire(model: dict, xs: dict, context: Context):
 def _acquire(model: meta(is_structure), p: Path, context: FileContext):
     p = (context.path or ".") / Path(p)
     return acquire(model, parse_file(p), FileContext(path=p.parent))
-
-
-def convertible_from_string(typ):
-    return any(
-        converter_types(ds, target=typ)[0] is str for ds in default_deserialization(typ)
-    )
 
 
 @ovld
