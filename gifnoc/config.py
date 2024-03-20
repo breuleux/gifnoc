@@ -7,7 +7,7 @@ class _Proxy:
         self._cached_built = None
         self._cached = None
 
-    def __obj(self):
+    def _obj(self):
         container = current_configuration()
         if container is None:
             raise Exception("No configuration was loaded.")
@@ -31,13 +31,13 @@ class _Proxy:
             raise Exception(f"No configuration was loaded for key '{key}'.")
 
     def __str__(self):
-        return f"Proxy for {self.__obj()}"
+        return f"Proxy for {self._obj()}"
 
     def __repr__(self):
-        return f"_Proxy({self.__obj()!r})"
+        return f"_Proxy({self._obj()!r})"
 
     def __getattr__(self, attr):
-        return getattr(self.__obj(), attr)
+        return getattr(self._obj(), attr)
 
 
 def __getattr__(key):
