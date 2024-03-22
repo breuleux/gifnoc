@@ -38,6 +38,13 @@ def compile_option(model: bool, path: str, option: Option):
 
 
 @ovld
+def compile_option(model: (int, float), path: str, option: Option):
+    if option.type is None:
+        option.type = model
+    return option
+
+
+@ovld
 def compile_option(model: object, path: str, option: Option):  # noqa: F811
     if isinstance(model, GenericAlias):
         assert model.__origin__ is list
