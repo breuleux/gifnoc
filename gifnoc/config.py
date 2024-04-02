@@ -37,6 +37,8 @@ class _Proxy:
         return f"_Proxy({self._obj()!r})"
 
     def __getattr__(self, attr):
+        if attr.startswith("__") and attr.endswith("__"):
+            raise AttributeError(attr)
         return getattr(self._obj(), attr)
 
 
