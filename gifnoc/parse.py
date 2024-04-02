@@ -3,12 +3,12 @@ from argparse import Namespace
 from dataclasses import dataclass
 from os import environ
 from pathlib import Path
-from types import NoneType
 
 from ovld import ovld
 
 from .utils import DELETE, MissingProxy
 
+NoneType = type(None)
 EnvironType = type(environ)
 
 

@@ -38,7 +38,7 @@ def compile_option(model: bool, path: str, option: Option):
 
 
 @ovld
-def compile_option(model: (int, float), path: str, option: Option):
+def compile_option(model: (int, float), path: str, option: Option):  # noqa: F811
     if option.type is None:
         option.type = model
     return option
