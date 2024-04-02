@@ -48,7 +48,6 @@ class RegisteredConfig:
                     for name, cfg in self.extras.items()
                 ],
             )
-            dc.__module__ = "<root>"
         if self.wrapper:
             dc = self.wrapper[dc]
         return dc

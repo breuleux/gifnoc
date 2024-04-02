@@ -1,5 +1,5 @@
 import logging
-from typing import Any, get_origin
+from typing import Any, Union, get_origin
 
 import apischema
 from apischema import json_schema, settings
@@ -10,6 +10,9 @@ from .docstrings import get_attribute_docstrings
 from .type_wrappers import TaggedSubclass
 
 logger = logging.getLogger(__name__)
+
+
+NoneType = type(None)
 
 
 @ovld
@@ -49,7 +52,7 @@ def serialization_schema(typ):
     return deserialization_schema(typ)
 
 
-def field_base_schema(tp: Any, name: str, alias: str) -> Schema | None:
+def field_base_schema(tp: Any, name: str, alias: str) -> Union[Schema, NoneType]:
     title = alias.replace("_", " ").capitalize()
     tp = get_origin(tp) or tp  # tp can be generic
 
