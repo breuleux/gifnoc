@@ -15,8 +15,8 @@ from .core import (  # noqa: F401
     overlay,
     use,
 )
-from .define import define  # noqa: F401
 from .registry import (  # noqa: F401
+    define,
     map_environment_variables,
     register,
 )

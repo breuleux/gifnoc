@@ -1,6 +1,8 @@
 from dataclasses import MISSING, dataclass, field, fields, is_dataclass, make_dataclass
 from functools import partial
-from typing import Callable, Optional
+from typing import Callable, Optional, Type, TypeVar
+
+_T = TypeVar("_T")
 
 
 def get_default_factory(cls, default_factory=None):
@@ -103,8 +105,27 @@ class Registry:
             self.envmap[envvar] = path.split(".")
         self.version += 1
 
+    def define(
+        self,
+        field: str,
+        model: Type[_T],
+        environ: Optional[dict] = None,
+        default_factory=None,
+    ) -> _T:
+        from .config import _Proxy
+
+        # The typing is a little bit of a lie since we're returning a _Proxy object,
+        # but it works just the same.
+        self.register(field, model, default_factory=default_factory)
+        if environ:
+            self.map_environment_variables(
+                **{k: f"{field}.{v}" for k, v in environ.items()}
+            )
+        return _Proxy(*field.split("."))
+
 
 global_registry = Registry()
 
 register = global_registry.register
 map_environment_variables = global_registry.map_environment_variables
+define = global_registry.define
