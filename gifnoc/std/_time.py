@@ -2,7 +2,7 @@ import time as stdtime
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from ..registry import define
+from ..interface import define
 from ..type_wrappers import TaggedSubclass
 
 

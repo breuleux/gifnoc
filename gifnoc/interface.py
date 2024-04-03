@@ -2,103 +2,29 @@ import os
 import sys
 from argparse import ArgumentParser
 from contextlib import contextmanager
-from contextvars import ContextVar
-from dataclasses import fields
 from types import SimpleNamespace
-from typing import Any
 
-from apischema import ValidationError, deserialize
-
-from .acquire import acquire
+from . import registry as registry_module
 from .arg import Command, add_arguments_to_parser, compile_command
-from .merge import merge
-from .parse import EnvironMap, OptionsMap, parse_source
-from .registry import global_registry
+from .parse import EnvironMap, OptionsMap
+from .registry import Configuration, Registry, active_configuration
 from .utils import ConfigurationError, get_at_path
 
+global_registry = Registry()
+registry_module.global_configuration = Configuration(
+    sources=[], registry=global_registry
+)
 
-class Configuration:
-    """Hold configuration base dict and built configuration.
-
-    Configuration objects act as context managers, setting the
-    ``gifnoc.active_configuration`` context variable. All code that
-    runs from within the ``with`` block will thus have access to that
-    specific configuration through ``gifnoc.config``.
-
-    Attributes:
-        sources: The data sources used to populate the configuration.
-        registry: The registry to use for the data model.
-        base: The configuration serialized as a dictionary.
-        built: The deserialized configuration object, with the proper
-            types.
-    """
-
-    def __init__(self, sources, registry):
-        self.sources = sources
-        self.registry = registry
-        self.base = None
-        self._built = None
-        self._model = None
-        self.version = None
-
-    def build(self):
-        self._model = model = self.registry.model()
-        dct = parse_sources(model, *self.sources)
-        dct = {f.name: dct[f.name] for f in fields(model) if f.name in dct}
-        try:
-            self._built = deserialize(model, dct, pass_through=lambda x: x is not Any)
-        except ValidationError as exc:
-            raise ConfigurationError(exc.errors) from None
-        self.base = dct
-        self.version = self.registry.version
-
-    @property
-    def built(self):
-        if not self._built or self.registry.version > self.version:
-            self.build()
-        return self._built
-
-    def overlay(self, sources):
-        return Configuration([*self.sources, *sources], self.registry)
-
-    def __enter__(self):
-        self._token = active_configuration.set(self)
-        built = self.built
-        for f in fields(self._model):
-            value = getattr(built, f.name, None)
-            if hasattr(value, "__enter__"):
-                value.__enter__()
-        return built
-
-    def __exit__(self, exct, excv, tb):
-        active_configuration.reset(self._token)
-        built = self.built
-        for f in fields(self._model):
-            value = getattr(built, f.name, None)
-            if hasattr(value, "__exit__"):
-                value.__exit__(exct, excv, tb)
-        self._token = None
-
-
-empty_configuration = Configuration(sources=[], registry=global_registry)
-global_configuration = empty_configuration
-active_configuration = ContextVar("active_configuration", default=empty_configuration)
+register = global_registry.register
+map_environment_variables = global_registry.map_environment_variables
+define = global_registry.define
+use = global_registry.use
+load = global_registry.load
+load_global = global_registry.load_global
 
 
 def current_configuration():
-    return active_configuration.get() or global_configuration
-
-
-def parse_sources(model, *sources):
-    result = {}
-    for src in sources:
-        for ctx, dct in parse_source(src):
-            result = merge(result, acquire(model, dct, ctx))
-    return result
-
-
-def is_loaded():
-    return current_configuration() is not None
+    return active_configuration.get() or registry_module.global_configuration
 
 
 def get(key):
@@ -111,7 +37,7 @@ def get(key):
 
 
 @contextmanager
-def overlay(*sources, registry=global_registry):
+def overlay(*sources):
     """Overlay extra configuration.
 
     This acts as a context manager. The modified configuration is available
@@ -119,32 +45,10 @@ def overlay(*sources, registry=global_registry):
 
     Arguments:
         sources: Paths to configuration files or dicts.
-        registry: Model registry to use. Defaults to the global registry.
     """
-    current = current_configuration() or Configuration(registry=registry, sources=[])
+    current = current_configuration()
     with current.overlay(sources) as overlaid:
         yield overlaid
-
-
-@contextmanager
-def use(*sources, registry=global_registry):
-    """Use a configuration."""
-    with Configuration(sources, registry) as cfg:
-        yield cfg
-
-
-def load(*sources, registry=global_registry):
-    container = Configuration(sources=sources, registry=registry)
-    return container.built
-
-
-def load_global(*sources, registry=global_registry):
-    global global_configuration
-
-    container = Configuration(sources=sources, registry=registry)
-    container.__enter__()
-    global_configuration = container
-    return container.built
 
 
 @contextmanager
@@ -227,7 +131,7 @@ def cli(
                 command = options
 
             command = compile_command(model, "", command)
-            add_arguments_to_parser(argparser, command)
+            add_arguments_to_parser(argparser, command, registry)
 
             parsed = argparser.parse_args(sys.argv[1:] if argv is None else argv)
         else:
@@ -254,8 +158,8 @@ def cli(
         container = Configuration(sources=sources, registry=registry)
         with container as cfg:
             if set_global:
-                old_global = global_configuration
-                global_configuration = container
+                old_global = registry_module.global_configuration
+                registry_module.global_configuration = container
             try:
                 if write_back_environ:
                     for envvar, pth in environ_map.items():
@@ -272,7 +176,7 @@ def cli(
                     yield cfg
             finally:
                 if set_global:
-                    global_configuration = old_global
+                    registry_module.global_configuration = old_global
 
     except ConfigurationError as exc:
         if exit_on_error:

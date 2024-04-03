@@ -5,8 +5,8 @@ from typing import Union
 
 from ovld import ovld
 
-from gifnoc.registry import global_registry
-from gifnoc.utils import ConfigurationError, convertible_from_string, type_at_path
+from .registry import Registry
+from .utils import ConfigurationError, convertible_from_string, type_at_path
 
 
 @dataclass
@@ -135,12 +135,14 @@ def compile_command(global_model, path, command):
 
 
 @ovld
-def add_arguments_to_parser(parser: argparse.ArgumentParser, command: Command):
+def add_arguments_to_parser(
+    parser: argparse.ArgumentParser, command: Command, registry: Registry
+):
     for dest, option in command.options.items():
         option.dest = f"&{dest}"
-        add_arguments_to_parser(parser, option)
+        add_arguments_to_parser(parser, option, registry)
     if command.commands:
-        global_model = global_registry.model()
+        global_model = registry.model()
         dest = f"&{command.mount}.{command.command_field}"
         path = dest[1:].split(".")
         try:
@@ -170,12 +172,12 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser, command: Command):
         )
         for command_name, subcmd in command.commands.items():
             subparser = subparsers.add_parser(command_name, help=subcmd.help)
-            add_arguments_to_parser(subparser, subcmd)
+            add_arguments_to_parser(subparser, subcmd, registry)
 
 
 @ovld
 def add_arguments_to_parser(  # noqa: F811
-    parser: argparse.ArgumentParser, option: Option
+    parser: argparse.ArgumentParser, option: Option, registry: Registry
 ):
     if option.metavar is None and option.option is not None:
         option.metavar = option.option.strip("-").upper()
@@ -193,11 +195,13 @@ def add_arguments_to_parser(  # noqa: F811
 
 @ovld
 def add_arguments_to_parser(  # noqa: F811
-    parser: argparse.ArgumentParser, options: dict
+    parser: argparse.ArgumentParser, options: dict, registry: Registry
 ):
-    add_arguments_to_parser(parser, Command(mount="", options=options))
+    add_arguments_to_parser(parser, Command(mount="", options=options), registry)
 
 
 @ovld
-def add_arguments_to_parser(parser: argparse.ArgumentParser, mount: str):  # noqa: F811
-    add_arguments_to_parser(parser, Command(mount=mount, auto=True))
+def add_arguments_to_parser(  # noqa: F811
+    parser: argparse.ArgumentParser, mount: str, registry: Registry
+):
+    add_arguments_to_parser(parser, Command(mount=mount, auto=True), registry)

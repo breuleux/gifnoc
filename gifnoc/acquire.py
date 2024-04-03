@@ -3,7 +3,8 @@ from pathlib import Path
 
 from ovld import meta, ovld
 
-from .parse import Context, EnvContext, FileContext, parse_file
+from .merge import merge
+from .parse import Context, EnvContext, FileContext, parse_file, parse_source
 from .utils import UnionTypes, convertible_from_string
 
 
@@ -128,3 +129,11 @@ def acquire(model, obj, context):
         model, *_ = model.__args__
     method = _acquire[getattr(model, "__origin__", model), type(obj), type(context)]
     return method(model, obj, context)
+
+
+def parse_sources(model, *sources):
+    result = {}
+    for src in sources:
+        for ctx, dct in parse_source(src):
+            result = merge(result, acquire(model, dct, ctx))
+    return result

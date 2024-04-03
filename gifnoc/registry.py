@@ -1,8 +1,82 @@
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import MISSING, dataclass, field, fields, is_dataclass, make_dataclass
 from functools import partial
-from typing import Callable, Optional, Type, TypeVar
+from typing import Any, Callable, Optional, Type, TypeVar
+
+from apischema import ValidationError, deserialize
+
+from .acquire import parse_sources
+from .utils import ConfigurationError
 
 _T = TypeVar("_T")
+
+
+active_configuration = ContextVar("active_configuration", default=None)
+global_configuration = None
+
+
+class Configuration:
+    """Hold configuration base dict and built configuration.
+
+    Configuration objects act as context managers, setting the
+    ``gifnoc.active_configuration`` context variable. All code that
+    runs from within the ``with`` block will thus have access to that
+    specific configuration through ``gifnoc.config``.
+
+    Attributes:
+        sources: The data sources used to populate the configuration.
+        registry: The registry to use for the data model.
+        base: The configuration serialized as a dictionary.
+        built: The deserialized configuration object, with the proper
+            types.
+    """
+
+    def __init__(self, sources, registry):
+        self.sources = sources
+        self.registry = registry
+        self.base = None
+        self._built = None
+        self._model = None
+        self.version = None
+
+    def build(self):
+        self._model = model = self.registry.model()
+        dct = parse_sources(model, *self.sources)
+        dct = {f.name: dct[f.name] for f in fields(model) if f.name in dct}
+        try:
+            self._built = deserialize(model, dct, pass_through=lambda x: x is not Any)
+        except ValidationError as exc:
+            raise ConfigurationError(exc.errors) from None
+        self.base = dct
+        self.version = self.registry.version
+
+    @property
+    def built(self):
+        if not self._built or self.registry.version > self.version:
+            self.build()
+        return self._built
+
+    def overlay(self, sources):
+        return Configuration([*self.sources, *sources], self.registry)
+
+    def __enter__(self):
+        self._token = active_configuration.set(self)
+        built = self.built
+        for f in fields(self._model):
+            value = getattr(built, f.name, None)
+            if hasattr(value, "__enter__"):
+                value.__enter__()
+        return built
+
+    def __exit__(self, exct, excv, tb):
+        active_configuration.reset(self._token)
+        built = self.built
+        for f in fields(self._model):
+            value = getattr(built, f.name, None)
+            if hasattr(value, "__exit__"):
+                value.__exit__(exct, excv, tb)
+        self._token = None
 
 
 def get_default_factory(cls, default_factory=None):
@@ -105,6 +179,24 @@ class Registry:
             self.envmap[envvar] = path.split(".")
         self.version += 1
 
+    @contextmanager
+    def use(self, *sources):
+        """Use a configuration."""
+        with Configuration(sources, self) as cfg:
+            yield cfg
+
+    def load(self, *sources):
+        container = Configuration(sources=sources, registry=self)
+        return container.built
+
+    def load_global(self, *sources):
+        global global_configuration
+
+        container = Configuration(sources=sources, registry=self)
+        container.__enter__()
+        global_configuration = container
+        return container.built
+
     def define(
         self,
         field: str,
@@ -122,10 +214,3 @@ class Registry:
                 **{k: f"{field}.{v}" for k, v in environ.items()}
             )
         return _Proxy(*field.split("."))
-
-
-global_registry = Registry()
-
-register = global_registry.register
-map_environment_variables = global_registry.map_environment_variables
-define = global_registry.define
