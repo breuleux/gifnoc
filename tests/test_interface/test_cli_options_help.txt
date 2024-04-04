@@ -1,0 +1,12 @@
+usage: pytest [-h] [--config CONFIG] [--name NAME]
+              [--nonprofit | --no-nonprofit] [--members MEMBERS]
+              [--machines MACHINES]
+
+options:
+  -h, --help            show this help message and exit
+  --config CONFIG       Configuration file(s) to load.
+  --name NAME           Name of the organization
+  --nonprofit, --no-nonprofit
+                        Whether the organization is a nonprofit
+  --members MEMBERS     Members of the organization
+  --machines MACHINES   Machines the organization owns

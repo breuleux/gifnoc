@@ -47,9 +47,11 @@ def compile_option(model: (int, float), path: str, option: Option):  # noqa: F81
 @ovld
 def compile_option(model: object, path: str, option: Option):  # noqa: F811
     if isinstance(model, GenericAlias):
-        assert model.__origin__ is list
-        option = compile_option(model.__args__[0], path, option)
-        option.action = "append"
+        if model.__origin__ is list:
+            option = compile_option(model.__args__[0], path, option)
+            option.action = "append"
+        else:
+            return None
     elif option.type is None:
         option.type = str
     return option
@@ -94,6 +96,8 @@ def compile_command(global_model, path, command):
         ap = abspath(mount, p)
         typ, doc = type_at_path(global_model, ap.split("."), allow_union=False)
         opt = compile_option[typ, str, type(v)](typ, mount, v)
+        if not opt:
+            return None
         if opt.help is None:
             opt.help = doc
         return ap, opt
@@ -118,7 +122,9 @@ def compile_command(global_model, path, command):
     if command.auto:
         options.update(auto(model, mount))
     options = _merge(options, command.options)
-    options = dict(_compile_option(p, v) for p, v in options.items())
+    options = dict(
+        compiled for p, v in options.items() if (compiled := _compile_option(p, v))
+    )
 
     commands = {
         cmd: compile_command(global_model, mount, v)
