@@ -1,4 +1,5 @@
 import os
+import sys
 from functools import partial
 from unittest import mock
 
@@ -95,6 +96,7 @@ def test_cli_simple_options(org, cli, configs):
         assert org.nonprofit is False
 
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Python 3.10 changed format")
 def test_cli_options_help(org, cli, configs, capsys, file_regression):
     with pytest.raises(SystemExit):
         with cli(
