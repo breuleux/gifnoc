@@ -12,28 +12,34 @@ from apischema import (
 )
 from apischema.conversions import Conversion
 from apischema.json_schema import deserialization_schema
+from apischema.objects import object_fields
 
 T = TypeVar("T")
 
 
-class _TaggedSubclass:
-    _cache = {}
+wrapper_cache = {}
 
+
+class _WrapperBase:
     def __class_getitem__(cls, item: Type[T]) -> Type[T]:
-        if item not in TaggedSubclass._cache:
+        name = cls.__name__.lstrip("_")
+        key = (cls, item)
+        if key not in wrapper_cache:
             typ = type(
-                f"TaggedSubclass[{item.__name__}]",
-                (TaggedSubclass,),
-                {"__passthrough__": item, "__wrapper__": _TaggedSubclass},
+                f"{name}[{item.__name__}]",
+                (cls,),
+                {"__passthrough__": item, "__wrapper__": cls},
             )
-            TaggedSubclass._cache[item] = typ
+            wrapper_cache[key] = typ
             deserializer(
                 Conversion(typ._deserialize, source=dict[str, Any], target=typ)
             )
             typ.register_schemas()
 
-        return TaggedSubclass._cache[item]
+        return wrapper_cache[key]
 
+
+class _TaggedSubclass(_WrapperBase):
     @classmethod
     def register_schemas(cls):
         base = cls.__passthrough__
@@ -87,16 +93,33 @@ class _TaggedSubclass:
         return deserialize(actual_class, data)
 
 
+class _Extensible(_WrapperBase):
+    @classmethod
+    def register_schemas(cls):
+        base = cls.__passthrough__
+        original = deserialization_schema(base)
+        schema(extra={**original, "additionalProperties": True})(cls)
+
+    @classmethod
+    def _deserialize(cls, data: dict):
+        base = cls.__passthrough__
+        fields = object_fields(base)
+        data = {k: v for k, v in data.items() if k in fields}
+        return deserialize(base, data)
+
+
 if TYPE_CHECKING:
     # Lets us pretend that TaggedSubclass[T] is T
     TaggedSubclass = Annotated[T, None]
+    Extensible = Annotated[T, None]
 
 else:
     TaggedSubclass = _TaggedSubclass
+    Extensible = _Extensible
 
 
 @serializer
-def _serialize(x: TaggedSubclass) -> dict:
+def _serialize_TaggedSubclass(x: TaggedSubclass) -> dict:
     qn = type(x).__qualname__
     assert "." not in qn, "Only top-level symbols can be serialized"
     mod = type(x).__module__
@@ -104,3 +127,8 @@ def _serialize(x: TaggedSubclass) -> dict:
         "class": f"{mod}:{qn}",
         **serialize(x),
     }
+
+
+@serializer
+def _serialize_Extensible(x: Extensible) -> dict:
+    return serialize(x)

@@ -1,0 +1,12 @@
+- class: tests.models:Point
+  x: 1
+  y: 2
+- class: tests.models:Point3D
+  x: 11
+  y: 22
+  z: 33
+- class: tests.models:Point4D
+  w: 444
+  x: 111
+  y: 222
+  z: 333

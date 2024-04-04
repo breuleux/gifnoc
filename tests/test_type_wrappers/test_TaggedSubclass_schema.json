@@ -1,0 +1,99 @@
+{
+    "type": "object",
+    "oneOf": [
+        {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "title": "X"
+                },
+                "y": {
+                    "type": "number",
+                    "title": "Y"
+                },
+                "class": {
+                    "title": "Class",
+                    "description": "Reference to the class to instantiate",
+                    "enum": [
+                        "Point"
+                    ]
+                }
+            },
+            "required": [
+                "x",
+                "y"
+            ],
+            "additionalProperties": false
+        },
+        {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "title": "X"
+                },
+                "y": {
+                    "type": "number",
+                    "title": "Y"
+                },
+                "z": {
+                    "type": "number",
+                    "title": "Z"
+                },
+                "class": {
+                    "title": "Class",
+                    "description": "Reference to the class to instantiate",
+                    "enum": [
+                        "Point3D"
+                    ]
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z",
+                "class"
+            ],
+            "additionalProperties": false
+        },
+        {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "title": "X"
+                },
+                "y": {
+                    "type": "number",
+                    "title": "Y"
+                },
+                "z": {
+                    "type": "number",
+                    "title": "Z"
+                },
+                "w": {
+                    "type": "number",
+                    "title": "W"
+                },
+                "class": {
+                    "title": "Class",
+                    "description": "Reference to the class to instantiate",
+                    "enum": [
+                        "Point4D"
+                    ]
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z",
+                "w",
+                "class"
+            ],
+            "additionalProperties": false
+        }
+    ],
+    "$schema": "http://json-schema.org/draft/2020-12/schema#",
+    "$defs": {}
+}

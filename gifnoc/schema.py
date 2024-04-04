@@ -7,7 +7,7 @@ from apischema.schemas import Schema
 from ovld import ovld
 
 from .docstrings import get_attribute_docstrings
-from .type_wrappers import TaggedSubclass
+from .type_wrappers import wrapper_cache
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def _pull_defs(obj: object):
 
 
 def deserialization_schema(typ):
-    for cls in TaggedSubclass._cache.values():
+    for cls in wrapper_cache.values():
         cls.register_schemas()
     rval = json_schema.deserialization_schema(typ)
     defs = _pull_defs(rval)

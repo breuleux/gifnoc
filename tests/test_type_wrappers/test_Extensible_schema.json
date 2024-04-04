@@ -1,0 +1,20 @@
+{
+    "type": "object",
+    "properties": {
+        "x": {
+            "type": "number",
+            "title": "X"
+        },
+        "y": {
+            "type": "number",
+            "title": "Y"
+        }
+    },
+    "required": [
+        "x",
+        "y"
+    ],
+    "additionalProperties": true,
+    "$schema": "http://json-schema.org/draft/2020-12/schema#",
+    "$defs": {}
+}
