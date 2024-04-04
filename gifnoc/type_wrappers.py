@@ -34,7 +34,6 @@ class _WrapperBase:
             deserializer(
                 Conversion(typ._deserialize, source=dict[str, Any], target=typ)
             )
-            typ.register_schemas()
 
         return wrapper_cache[key]
 

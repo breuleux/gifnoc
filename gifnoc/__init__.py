@@ -18,4 +18,4 @@ from .registry import (  # noqa: F401
     Configuration,
     active_configuration,
 )
-from .type_wrappers import TaggedSubclass  # noqa: F401
+from .type_wrappers import Extensible, TaggedSubclass  # noqa: F401
