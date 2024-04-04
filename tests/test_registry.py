@@ -39,7 +39,7 @@ def test_context(registry):
     assert sentinel[0] == -1
 
 
-def test_register_deep(registry):
+def test_register_deep(registry, configs):
     p1 = registry.define(
         field="points.one",
         model=Point,
@@ -48,8 +48,18 @@ def test_register_deep(registry):
         field="points.two",
         model=Point,
     )
-    with registry.use({"points": {"one": Point(1, 2), "two": Point(10, 20)}}):
+    with registry.use(configs / "some-points.yaml"):
         assert p1.x == 1
         assert p1.y == 2
+        assert p2.x == 10
+        assert p2.y == 20
+
+
+def test_register_deep_incomplete(registry, configs):
+    p2 = registry.define(
+        field="points.two",
+        model=Point,
+    )
+    with registry.use(configs / "some-points.yaml"):
         assert p2.x == 10
         assert p2.y == 20

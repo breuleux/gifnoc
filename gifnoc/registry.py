@@ -7,6 +7,7 @@ from typing import Any, Callable, Optional, Type, TypeVar
 from apischema import ValidationError, deserialize
 
 from .acquire import parse_sources
+from .type_wrappers import Extensible
 from .utils import ConfigurationError
 
 _T = TypeVar("_T")
@@ -159,7 +160,7 @@ class Registry:
                 hierarchy.extras[root] = RegisteredConfig(
                     path=".".join(path),
                     key=root,
-                    cls=Root if rest else cls,
+                    cls=Extensible[Root] if rest else cls,
                     default_factory=default_factory,
                 )
 
