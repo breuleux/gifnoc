@@ -8,15 +8,15 @@ class MissingConfigurationError(Exception):
 class Proxy:
     def __init__(self, *pth):
         self._pth = pth
-        self._cached_built = None
+        self._cached_data = None
         self._cached = None
 
     def _obj(self):
         container = current_configuration()
         if container is None:  # pragma: no cover
             raise MissingConfigurationError("No configuration was loaded.")
-        root = cfg = container.built
-        if cfg is self._cached_built:
+        root = cfg = container.data
+        if cfg is self._cached_data:
             return self._cached
         try:
             for k in self._pth:
@@ -26,7 +26,7 @@ class Proxy:
                     cfg = cfg[int(k)]
                 else:
                     cfg = getattr(cfg, k)
-            self._cached_built = root
+            self._cached_data = root
             self._cached = cfg
             return cfg
         except (KeyError, AttributeError):

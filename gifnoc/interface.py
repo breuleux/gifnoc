@@ -162,9 +162,10 @@ def cli(
                         else:
                             environ[envvar] = str(value)
                 if parse_args:
-                    yield cfg, parsed
+                    container.options = options
+                    yield container
                 else:
-                    yield cfg
+                    yield container
             finally:
                 if set_global:
                     registry_module.global_configuration = old_global
