@@ -1,0 +1,18 @@
+org:
+  name: mila
+  nonprofit: true
+  members:
+    - name: Olivier Breuleux
+      username: breuleuo
+      home: "breuleuo"
+      start: "2017-06-01"
+      end: null
+  machines:
+    - name: turbo01
+      os: Bubuntu
+      ngpus: 32
+    - name: turbo02
+      os: Bubuntu
+      ngpus: 32
+  passwords:
+    breuleuo: "password123"
