@@ -15,11 +15,6 @@ def cli(registry):
     return partial(gifnoc.cli, registry=registry, write_back_environ=False)
 
 
-def test_use(org, registry, configs):
-    with registry.use(configs / "mila.yaml"):
-        assert org.name == "mila"
-
-
 def test_overlay(org, registry, configs):
     with registry.use(configs / "mila.yaml"):
         assert org.name == "mila"

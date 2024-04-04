@@ -187,12 +187,13 @@ class Registry:
     @contextmanager
     def use(self, *sources):
         """Use a configuration."""
-        with Configuration(sources, self) as cfg:
-            yield cfg
+        container = Configuration(sources, self)
+        with container:
+            yield container
 
     def load(self, *sources):
         container = Configuration(sources=sources, registry=self)
-        return container.data
+        return container
 
     def load_global(self, *sources):
         global global_configuration
@@ -200,7 +201,7 @@ class Registry:
         container = Configuration(sources=sources, registry=self)
         container.__enter__()
         global_configuration = container
-        return container.data
+        return container
 
     def define(
         self,
