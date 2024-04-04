@@ -27,15 +27,6 @@ def current_configuration():
     return active_configuration.get() or registry_module.global_configuration
 
 
-def get(key):
-    cfg = current_configuration()
-    if cfg is None:
-        raise Exception("No configuration was loaded.")
-    elif not getattr(cfg.built, key, None):
-        raise Exception(f"No configuration was loaded for key '{key}'.")
-    return getattr(cfg.built, key)
-
-
 @contextmanager
 def overlay(*sources):
     """Overlay extra configuration.

@@ -1,4 +1,5 @@
 import os
+from functools import partial
 from unittest import mock
 
 import pytest
@@ -6,6 +7,12 @@ import pytest
 import gifnoc
 from gifnoc.arg import Command
 from gifnoc.parse import EnvironMap
+from gifnoc.utils import ConfigurationError
+
+
+@pytest.fixture
+def cli(registry):
+    return partial(gifnoc.cli, registry=registry, write_back_environ=False)
 
 
 def test_use(org, registry, configs):
@@ -53,43 +60,51 @@ def test_envvar_not_set(org, registry, configs):
 #############
 
 
-def test_cli(org, registry, configs):
+def test_cli(org, cli, configs):
     pth = str(configs / "mila.yaml")
-    with gifnoc.cli(registry=registry, argv=["--config", pth]):
+    with cli(argv=["--config", pth]):
         assert org.name == "mila"
 
 
-def test_cli_gifnoc_file(org, registry, configs):
+def test_cli_incomplete_conf(org, cli):
+    src = [{"org": {"name": "x"}}]
+    with pytest.raises(SystemExit):
+        with cli(sources=src, argv=[]):
+            pass
+    with pytest.raises(ConfigurationError):
+        with cli(sources=src, argv=[], exit_on_error=False):
+            pass
+
+
+def test_cli_gifnoc_file(org, cli, configs):
     pth = str(configs / "mila.yaml")
     with mock.patch.dict(os.environ, {"GIFNOC_FILE": pth}):
-        with gifnoc.cli(registry=registry, argv=[]):
+        with cli(argv=[]):
             assert org.name == "mila"
 
 
-def test_cli_custom_envvar(org, registry, configs):
+def test_cli_custom_envvar(org, cli, configs):
     pth = str(configs / "mila.yaml")
     with mock.patch.dict(os.environ, {"XOXOX": pth}):
-        with gifnoc.cli(envvar="XOXOX", registry=registry, argv=[]):
+        with cli(envvar="XOXOX", argv=[]):
             assert org.name == "mila"
 
 
-def test_cli_simple_options(org, registry, configs):
-    with gifnoc.cli(
+def test_cli_simple_options(org, cli, configs):
+    with cli(
         sources=[configs / "mila.yaml"],
         options="org",
-        registry=registry,
         argv=["--name", "alim", "--no-nonprofit"],
     ):
         assert org.name == "alim"
         assert org.nonprofit is False
 
 
-def test_cli_options_help(org, registry, configs, capsys, file_regression):
+def test_cli_options_help(org, cli, configs, capsys, file_regression):
     with pytest.raises(SystemExit):
-        with gifnoc.cli(
+        with cli(
             sources=[configs / "mila.yaml"],
             options="org",
-            registry=registry,
             argv=["-h"],
         ):
             pass
@@ -97,8 +112,8 @@ def test_cli_options_help(org, registry, configs, capsys, file_regression):
     file_regression.check(captured.out)
 
 
-def test_cli_custom_options(org, registry, configs):
-    with gifnoc.cli(
+def test_cli_custom_options(org, cli, configs):
+    with cli(
         sources=[configs / "mila.yaml"],
         options=Command(
             mount="org",
@@ -106,7 +121,6 @@ def test_cli_custom_options(org, registry, configs):
                 ".name": "-n",
             },
         ),
-        registry=registry,
         argv=["-n", "zoup"],
     ):
         assert org.name == "zoup"

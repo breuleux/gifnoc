@@ -7,7 +7,6 @@ from .interface import (  # noqa: F401
     cli,
     current_configuration,
     define,
-    get,
     load,
     load_global,
     map_environment_variables,

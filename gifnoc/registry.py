@@ -61,13 +61,18 @@ class Configuration:
         return Configuration([*self.sources, *sources], self.registry)
 
     def __enter__(self):
-        self._token = active_configuration.set(self)
-        built = self.built
-        for f in fields(self._model):
-            value = getattr(built, f.name, None)
-            if hasattr(value, "__enter__"):
-                value.__enter__()
-        return built
+        try:
+            self._token = active_configuration.set(self)
+            built = self.built
+            for f in fields(self._model):
+                value = getattr(built, f.name, None)
+                if hasattr(value, "__enter__"):
+                    value.__enter__()
+            return built
+        except Exception:
+            active_configuration.reset(self._token)
+            self._token = None
+            raise
 
     def __exit__(self, exct, excv, tb):
         active_configuration.reset(self._token)
