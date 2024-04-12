@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-ovld = "^0.3.2"
+ovld = "^0.3.4"
 apischema = "^0.18.1"
 
 [tool.poetry.group.dev.dependencies]
