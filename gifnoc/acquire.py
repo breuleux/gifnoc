@@ -18,11 +18,11 @@ class PassthroughProtocol(Protocol):
         return hasattr(cls, "__passthrough__")
 
 
-Structure = list | dict | Dataclass
+StructureType = type[list] | type[dict] | type[Dataclass]
 
 
 @ovld
-def _acquire(model: Dataclass, d: dict, context: Context):
+def acquire(model: type[Dataclass], d: dict, context: Context):
     d = dict(d)
     for field in fields(model):
         if field.name in d:
@@ -32,33 +32,33 @@ def _acquire(model: Dataclass, d: dict, context: Context):
 
 
 @ovld
-def _acquire(model: str, s: str, context: FileContext):
+def acquire(model: type[str], s: str, context: FileContext):  # noqa: F811
     return s
 
 
 @ovld
-def _acquire(model: int, x: int, context: Context):
+def acquire(model: type[int], x: int, context: Context):  # noqa: F811
     return x
 
 
 @ovld
-def _acquire(model: float, x: float, context: Context):
+def acquire(model: type[float], x: float, context: Context):  # noqa: F811
     return x
 
 
 @ovld
-def _acquire(model: bool, x: bool, context: Context):
+def acquire(model: type[bool], x: bool, context: Context):  # noqa: F811
     return x
 
 
 @ovld
-def _acquire(model: list, xs: list, context: Context):
+def acquire(model: type[list], xs: list, context: Context):  # noqa: F811
     (element_model,) = model.__args__
     return [acquire(element_model, x, context) for x in xs]
 
 
 @ovld
-def _acquire(model: dict, xs: dict, context: Context):
+def acquire(model: type[dict], xs: dict, context: Context):  # noqa: F811
     if hasattr(model, "__annotations__"):
         return {
             k: acquire(v_model, xs[k], context)
@@ -78,13 +78,13 @@ def _acquire(model: dict, xs: dict, context: Context):
 
 
 @ovld
-def _acquire(model: Structure, p: Path, context: FileContext):
+def acquire(model: StructureType, p: Path, context: FileContext):  # noqa: F811
     p = (context.path or ".") / Path(p)
     return acquire(model, parse_file(p), FileContext(path=p.parent))
 
 
 @ovld
-def _acquire(model: Structure, s: str, context: FileContext):
+def acquire(model: StructureType, s: str, context: FileContext):  # noqa: F811
     if convertible_from_string(model):
         return s
     else:
@@ -92,12 +92,14 @@ def _acquire(model: Structure, s: str, context: FileContext):
 
 
 @ovld
-def _acquire(model: PassthroughProtocol, x: object, context: Context):
+def acquire(  # noqa: F811
+    model: type[PassthroughProtocol], x: object, context: Context
+):
     return acquire(model.__passthrough__, x, context)
 
 
 @ovld
-def _acquire(model: bool, s: str, context: EnvContext):
+def acquire(model: type[bool], s: str, context: EnvContext):  # noqa: F811
     if s.strip().lower() in ("", "0", "false"):
         return False
     else:
@@ -105,35 +107,34 @@ def _acquire(model: bool, s: str, context: EnvContext):
 
 
 @ovld
-def _acquire(model: int, s: str, context: EnvContext):
+def acquire(model: type[int], s: str, context: EnvContext):  # noqa: F811
     return int(s)
 
 
 @ovld
-def _acquire(model: float, s: str, context: EnvContext):
+def acquire(model: type[float], s: str, context: EnvContext):  # noqa: F811
     return float(s)
 
 
 @ovld
-def _acquire(model: str, s: str, context: EnvContext):
+def acquire(model: type[str], s: str, context: EnvContext):  # noqa: F811
     return s
 
 
 @ovld
-def _acquire(model: Path, s: str, context: FileContext):
+def acquire(model: type[Path], s: str, context: FileContext):  # noqa: F811
     return str(((context.path or ".") / s).resolve())
 
 
 @ovld
-def _acquire(model: object, obj: object, context: Context):
+def acquire(model: type[object], obj: object, context: Context):  # noqa: F811
     return obj
 
 
-def acquire(model, obj, context):
-    if isinstance(model, UnionTypes):
-        model, *_ = model.__args__
-    method = _acquire[getattr(model, "__origin__", model), type(obj), type(context)]
-    return method(model, obj, context)
+@ovld
+def acquire(model: UnionTypes, obj: object, context: Context):  # noqa: F811
+    model, *_ = model.__args__
+    return acquire(model, obj, context)
 
 
 def parse_sources(model, *sources):
