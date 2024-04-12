@@ -31,35 +31,41 @@ class Command:
 
 
 @ovld
-def compile_option(model: bool, path: str, option: Option):
+def compile_option(model: type[bool], path: str, option: Option):
     if option.action is None:
         option.action = argparse.BooleanOptionalAction
     return option
 
 
 @ovld
-def compile_option(model: (int, float), path: str, option: Option):  # noqa: F811
+def compile_option(  # noqa: F811
+    model: type[int] | type[float], path: str, option: Option
+):
     if option.type is None:
         option.type = model
     return option
 
 
 @ovld
-def compile_option(model: object, path: str, option: Option):  # noqa: F811
+def compile_option(model: type[list], path: str, option: Option):  # noqa: F811
+    assert isinstance(model, GenericAlias)
+    option = compile_option(model.__args__[0], path, option)
+    option.action = "append"
+    return option
+
+
+@ovld
+def compile_option(model: type[object], path: str, option: Option):  # noqa: F811
     if isinstance(model, GenericAlias):
-        if model.__origin__ is list:
-            option = compile_option(model.__args__[0], path, option)
-            option.action = "append"
-        else:
-            return None
+        return None
     elif option.type is None:
         option.type = str
     return option
 
 
 @ovld
-def compile_option(model: object, path: str, option: str):  # noqa: F811
-    return compile_option[model, str, Option](model, path, Option(option=option))
+def compile_option(model: type[object], path: str, option: str):  # noqa: F811
+    return compile_option(model, path, Option(option=option))
 
 
 def abspath(path, mount):
@@ -95,7 +101,7 @@ def compile_command(global_model, path, command):
     def _compile_option(p, v):
         ap = abspath(mount, p)
         typ, doc = type_at_path(global_model, ap.split("."), allow_union=False)
-        opt = compile_option[typ, str, type(v)](typ, mount, v)
+        opt = compile_option(typ, mount, v)
         if not opt:
             return None
         if opt.help is None:
