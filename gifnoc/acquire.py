@@ -1,23 +1,28 @@
-from dataclasses import fields, is_dataclass
+from dataclasses import fields
 from pathlib import Path
+from typing import Protocol, runtime_checkable
 
-from ovld import meta, ovld
+from ovld import Dataclass, ovld
 
 from .merge import merge
 from .parse import Context, EnvContext, FileContext, parse_file, parse_source
 from .utils import UnionTypes, convertible_from_string
 
 
-def is_structure(cls):
-    return issubclass(cls, dict) or issubclass(cls, list) or is_dataclass(cls)
+@runtime_checkable
+class PassthroughProtocol(Protocol):
+    __passthrough__: object
+
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        return hasattr(cls, "__passthrough__")
 
 
-def is_passthrough(cls):
-    return hasattr(cls, "__passthrough__")
+Structure = list | dict | Dataclass
 
 
 @ovld
-def _acquire(model: meta(is_dataclass), d: dict, context: Context):
+def _acquire(model: Dataclass, d: dict, context: Context):
     d = dict(d)
     for field in fields(model):
         if field.name in d:
@@ -73,13 +78,13 @@ def _acquire(model: dict, xs: dict, context: Context):
 
 
 @ovld
-def _acquire(model: meta(is_structure), p: Path, context: FileContext):
+def _acquire(model: Structure, p: Path, context: FileContext):
     p = (context.path or ".") / Path(p)
     return acquire(model, parse_file(p), FileContext(path=p.parent))
 
 
 @ovld
-def _acquire(model: meta(is_structure), s: str, context: FileContext):
+def _acquire(model: Structure, s: str, context: FileContext):
     if convertible_from_string(model):
         return s
     else:
@@ -87,7 +92,7 @@ def _acquire(model: meta(is_structure), s: str, context: FileContext):
 
 
 @ovld
-def _acquire(model: meta(is_passthrough), x: object, context: Context):
+def _acquire(model: PassthroughProtocol, x: object, context: Context):
     return acquire(model.__passthrough__, x, context)
 
 
