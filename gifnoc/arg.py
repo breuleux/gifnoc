@@ -39,7 +39,7 @@ def compile_option(model: type[bool], path: str, option: Option):
 
 @ovld
 def compile_option(  # noqa: F811
-    model: type[int] | type[float], path: str, option: Option
+    model: Union[type[int], type[float]], path: str, option: Option
 ):
     if option.type is None:
         option.type = model

@@ -1,6 +1,6 @@
 from dataclasses import fields
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Protocol, Union, runtime_checkable
 
 from ovld import Dataclass, ovld
 
@@ -18,7 +18,7 @@ class PassthroughProtocol(Protocol):
         return hasattr(cls, "__passthrough__")
 
 
-StructureType = type[list] | type[dict] | type[Dataclass]
+StructureType = Union[type[list], type[dict], type[Dataclass]]
 
 
 @ovld
