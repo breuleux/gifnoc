@@ -24,6 +24,19 @@ def test_overlay(org, registry, configs):
         assert org.name == "mila"
 
 
+def test_empty_config(registry, configs):
+    with registry.use(configs / "empty.yaml"):
+        pass
+
+
+def test_config_plus_empty(org, registry, configs):
+    with registry.use(configs / "mila.yaml", configs / "empty.yaml"):
+        assert org.name == "mila"
+        with gifnoc.overlay({"org": {"name": "sekret"}}):
+            assert org.name == "sekret"
+        assert org.name == "mila"
+
+
 @mock.patch.dict(os.environ, {"ORG_NAME": "boop"})
 def test_envvar(org, registry, configs):
     env = EnvironMap(environ=os.environ, map={"ORG_NAME": "org.name".split(".")})

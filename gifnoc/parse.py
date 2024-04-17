@@ -96,7 +96,8 @@ def parse_file(file, parser=None):
         if parser is None:
             raise NoParserError(f"No parser found for the {sfx} format")
     text = file.read_text()
-    return parser.load(text)
+    results = parser.load(text)
+    return results if results is not None else {}
 
 
 @ovld
