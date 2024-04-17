@@ -11,9 +11,7 @@ def test_acquire_file():
         Path(__file__).parent / "objects" / "person-links.yaml",
         FileContext(path=None),
     )
-    assert acq == {
-        "people": [{"name": "Olivier", "age": 39}, {"name": "Sophie", "age": 31}]
-    }
+    assert acq == {"people": [{"name": "Olivier", "age": 39}, {"name": "Sophie", "age": 31}]}
 
 
 def test_acquire_environment():

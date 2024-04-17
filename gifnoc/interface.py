@@ -11,9 +11,7 @@ from .registry import Configuration, Registry, active_configuration
 from .utils import ConfigurationError, get_at_path
 
 global_registry = Registry()
-registry_module.global_configuration = Configuration(
-    sources=[], registry=global_registry
-)
+registry_module.global_configuration = Configuration(sources=[], registry=global_registry)
 
 register = global_registry.register
 map_environment_variables = global_registry.map_environment_variables
@@ -115,9 +113,7 @@ def cli(
             elif isinstance(options, str):
                 command = Command(mount=options, auto=True)
             elif not isinstance(options, Command):
-                raise TypeError(
-                    "options argument to cli() should be a dict or a Command"
-                )
+                raise TypeError("options argument to cli() should be a dict or a Command")
             else:
                 command = options
 

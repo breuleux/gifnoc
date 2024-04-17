@@ -37,9 +37,7 @@ def command_schema(options, sources):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Do things with gifnoc configurations."
-    )
+    parser = argparse.ArgumentParser(description="Do things with gifnoc configurations.")
     parser.add_argument(
         "--module",
         "-m",
@@ -69,9 +67,7 @@ def main():
     dump.add_argument("--format", "-f", help="Dump format", default="raw")
 
     schema = subparsers.add_parser("schema", help="Dump JSON schema.")
-    schema.add_argument(
-        "SUBPATH", help="Subpath to get a schema for", nargs="?", default=None
-    )
+    schema.add_argument("SUBPATH", help="Subpath to get a schema for", nargs="?", default=None)
 
     options = parser.parse_args()
 

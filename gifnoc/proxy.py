@@ -31,9 +31,7 @@ class Proxy:
             return cfg
         except (KeyError, AttributeError):
             key = ".".join(self._pth)
-            raise MissingConfigurationError(
-                f"No configuration was loaded for key '{key}'."
-            )
+            raise MissingConfigurationError(f"No configuration was loaded for key '{key}'.")
 
     def __str__(self):
         return f"Proxy for {self._obj()}"

@@ -31,9 +31,7 @@ class _WrapperBase:
                 {"__passthrough__": item, "__wrapper__": cls},
             )
             wrapper_cache[key] = typ
-            deserializer(
-                Conversion(typ._deserialize, source=dict[str, Any], target=typ)
-            )
+            deserializer(Conversion(typ._deserialize, source=dict[str, Any], target=typ))
 
         return wrapper_cache[key]
 

@@ -121,11 +121,7 @@ class RegisteredConfig:
                     (
                         name,
                         built := cfg.build(),
-                        field(
-                            default_factory=get_default_factory(
-                                built, cfg.default_factory
-                            )
-                        ),
+                        field(default_factory=get_default_factory(built, cfg.default_factory)),
                     )
                     for name, cfg in self.extras.items()
                 ],
@@ -217,7 +213,5 @@ class Registry:
         # but it works just the same.
         self.register(field, model, default_factory=default_factory)
         if environ:
-            self.map_environment_variables(
-                **{k: f"{field}.{v}" for k, v in environ.items()}
-            )
+            self.map_environment_variables(**{k: f"{field}.{v}" for k, v in environ.items()})
         return _Proxy(*field.split("."))

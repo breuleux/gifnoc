@@ -1,6 +1,5 @@
 """Utilities to merge dictionaries and other data structures."""
 
-
 from typing import Union
 
 from ovld import ovld

@@ -115,11 +115,7 @@ def compile_command(global_model, path, command):
             if k in results:
                 v = replace(
                     results[k],
-                    **{
-                        key: value
-                        for key, value in vars(v).items()
-                        if value is not None
-                    },
+                    **{key: value for key, value in vars(v).items() if value is not None},
                 )
             results[k] = v
         return results
@@ -128,13 +124,10 @@ def compile_command(global_model, path, command):
     if command.auto:
         options.update(auto(model, mount))
     options = _merge(options, command.options)
-    options = dict(
-        compiled for p, v in options.items() if (compiled := _compile_option(p, v))
-    )
+    options = dict(compiled for p, v in options.items() if (compiled := _compile_option(p, v)))
 
     commands = {
-        cmd: compile_command(global_model, mount, v)
-        for cmd, v in command.commands.items()
+        cmd: compile_command(global_model, mount, v) for cmd, v in command.commands.items()
     }
     return replace(
         command,
@@ -147,9 +140,7 @@ def compile_command(global_model, path, command):
 
 
 @ovld
-def add_arguments_to_parser(
-    parser: argparse.ArgumentParser, command: Command, registry: Registry
-):
+def add_arguments_to_parser(parser: argparse.ArgumentParser, command: Command, registry: Registry):
     for dest, option in command.options.items():
         option.dest = f"&{dest}"
         add_arguments_to_parser(parser, option, registry)

@@ -136,6 +136,4 @@ def get_at_path(cfg, path):
 
 
 def convertible_from_string(typ):
-    return any(
-        converter_types(ds, target=typ)[0] is str for ds in default_deserialization(typ)
-    )
+    return any(converter_types(ds, target=typ)[0] is str for ds in default_deserialization(typ))
