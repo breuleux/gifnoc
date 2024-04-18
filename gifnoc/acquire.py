@@ -15,7 +15,7 @@ class PassthroughProtocol(Protocol):
 
     @classmethod
     def __subclasshook__(cls, subclass):
-        return hasattr(cls, "__passthrough__")
+        return hasattr(subclass, "__passthrough__")
 
 
 StructureType = Union[type[list], type[dict], type[Dataclass]]

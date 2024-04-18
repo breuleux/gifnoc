@@ -73,6 +73,7 @@ def test_cli(org, cli, configs):
     pth = str(configs / "mila.yaml")
     with cli(argv=["--config", pth]):
         assert org.name == "mila"
+        assert org.members[0].home == configs / "breuleuo"
 
 
 def test_cli_incomplete_conf(org, cli):
