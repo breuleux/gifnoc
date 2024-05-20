@@ -5,18 +5,18 @@ from importlib import import_module
 
 from apischema import serialize
 
-from .core import use
+from .interface import global_registry, use
 from .parse import EnvironMap, extensions
-from .registry import global_registry
 from .schema import deserialization_schema
 from .utils import get_at_path, type_at_path
 
 
 def command_dump(options, sources):
     with use(*sources()) as cfg:
+        data = cfg.data
         if options.SUBPATH:
-            cfg = get_at_path(cfg, options.SUBPATH.split("."))
-        ser = serialize(cfg)
+            data = get_at_path(data, options.SUBPATH.split("."))
+        ser = serialize(data)
         if options.format == "raw":
             print(ser)
         else:
@@ -29,7 +29,7 @@ def command_dump(options, sources):
 
 def command_schema(options, sources):
     with use(*sources(require=False)) as cfg:
-        cfg_type = type(cfg)
+        cfg_type = type(cfg.data)
         if options.SUBPATH:
             cfg_type, _ = type_at_path(cfg_type, options.SUBPATH.split("."))
         schema = deserialization_schema(cfg_type)
