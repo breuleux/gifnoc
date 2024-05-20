@@ -11,20 +11,39 @@ from .schema import deserialization_schema
 from .utils import get_at_path, type_at_path
 
 
-def command_dump(options, sources):
+def extract(options, sources):
     with use(*sources()) as cfg:
         data = cfg.data
         if options.SUBPATH:
             data = get_at_path(data, options.SUBPATH.split("."))
-        ser = serialize(data)
-        if options.format == "raw":
-            print(ser)
+        return data
+
+
+def command_dump(options, sources):
+    data = extract(options, sources)
+    ser = serialize(data)
+    if options.format == "raw":
+        print(ser)
+    else:
+        fmt = f".{options.format}"
+        if fmt not in extensions:
+            exit(f"Cannot dump to '{options.format}' format")
         else:
-            fmt = f".{options.format}"
-            if fmt not in extensions:
-                exit(f"Cannot dump to '{options.format}' format")
-            else:
-                print(extensions[fmt].dump(ser))
+            print(extensions[fmt].dump(ser))
+
+
+def command_check(options, sources):
+    try:
+        data = extract(options, sources)
+    except AttributeError:
+        print("nonexistent")
+        exit(2)
+    if data:
+        print("true")
+        exit(0)
+    elif not data:
+        print("false")
+        exit(1)
 
 
 def command_schema(options, sources):
@@ -65,6 +84,9 @@ def main():
     dump = subparsers.add_parser("dump", help="Dump configuration.")
     dump.add_argument("SUBPATH", help="Subpath to dump", nargs="?", default=None)
     dump.add_argument("--format", "-f", help="Dump format", default="raw")
+
+    dump = subparsers.add_parser("check", help="Check configuration (true/false).")
+    dump.add_argument("SUBPATH", help="Subpath to check", nargs="?", default=None)
 
     schema = subparsers.add_parser("schema", help="Dump JSON schema.")
     schema.add_argument("SUBPATH", help="Subpath to get a schema for", nargs="?", default=None)
