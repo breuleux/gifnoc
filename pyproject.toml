@@ -1,7 +1,7 @@
 [project]
 name = "gifnoc"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.3.3"
+description = "Handle configuration for multiple libraries"
 authors = [
     { name = "Olivier Breuleux", email = "breuleux@gmail.com" }
 ]
@@ -9,6 +9,7 @@ dependencies = [
     "ovld~=0.3.6",
     "apischema>=0.18.1",
 ]
+license = "MIT"
 readme = "README.md"
 requires-python = ">= 3.9"
 
