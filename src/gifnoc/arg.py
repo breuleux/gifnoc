@@ -1,7 +1,7 @@
 import argparse
 from dataclasses import dataclass, field, fields, is_dataclass, replace
 from types import GenericAlias
-from typing import Union
+from typing import Optional, Union
 
 from ovld import ovld
 
@@ -11,13 +11,13 @@ from .utils import ConfigurationError, convertible_from_string, type_at_path
 
 @dataclass
 class Option:
-    option: str = None
+    option: Optional[str] = None
     aliases: list[str] = field(default_factory=list)
-    action: object = None
-    metavar: str = None
-    help: str = None
-    required: bool = None
-    type: object = None
+    action: Optional[object] = None
+    metavar: Optional[str] = None
+    help: Optional[str] = None
+    required: Optional[bool] = None
+    type: Optional[object] = None
 
 
 @dataclass
@@ -184,15 +184,22 @@ def add_arguments_to_parser(  # noqa: F811
 ):
     if option.metavar is None and option.option is not None:
         option.metavar = option.option.strip("-").upper()
+    kwargs = {
+        "action": option.action,
+        "metavar": option.metavar,
+        "help": option.help,
+        "required": option.required,
+        "type": option.type,
+        "dest": option.dest,
+    }
+    if option.action == argparse.BooleanOptionalAction:
+        # Python 3.14 will raise an exception on these, apparently.
+        kwargs.pop("metavar")
+        kwargs.pop("type")
     parser.add_argument(
         *([option.option] if option.option else []),
         *option.aliases,
-        action=option.action,
-        metavar=option.metavar,
-        help=option.help,
-        required=option.required,
-        type=option.type,
-        dest=option.dest,
+        **kwargs,
     )
 
 
