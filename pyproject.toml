@@ -1,28 +1,39 @@
-[tool.poetry]
+[project]
 name = "gifnoc"
-version = "0.3.3"
-description = "Handle configuration for multiple libraries"
-authors = ["Olivier Breuleux <breuleux@gmail.com>"]
-license = "MIT"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Olivier Breuleux", email = "breuleux@gmail.com" }
+]
+dependencies = [
+    "ovld~=0.3.6",
+    "apischema>=0.18.1",
+]
 readme = "README.md"
+requires-python = ">= 3.9"
 
-[tool.poetry.dependencies]
-python = "^3.9"
-ovld = "^0.3.5"
-apischema = "^0.18.1"
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.3.7"
-pytest-cov = "^5.0.0"
-pytest-regressions = "^2.5.0"
-pytest-timeout = "^2.3.1"
-
-[tool.poetry.scripts]
+[project.scripts]
 gifnoc = "gifnoc.__main__:main"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=8.3.2",
+    "pytest-cov>=5.0.0",
+    "pytest-regressions>=2.5.0",
+    "pytest-timeout>=2.3.1",
+    "uv>=0.2.30",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gifnoc"]
 
 [tool.ruff]
 line-length = 99

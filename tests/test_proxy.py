@@ -1,5 +1,4 @@
 import pytest
-
 from gifnoc.proxy import MissingConfigurationError, Proxy
 
 

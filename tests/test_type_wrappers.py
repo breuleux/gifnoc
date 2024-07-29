@@ -1,7 +1,6 @@
 import json
 
 from apischema import deserialize, serialize
-
 from gifnoc.schema import deserialization_schema
 from gifnoc.type_wrappers import Extensible, TaggedSubclass
 
