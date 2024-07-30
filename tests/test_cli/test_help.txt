@@ -1,0 +1,20 @@
+usage: pytest [-h] [--module MODULE] [--config CONFIG] [--ignore-env]
+              {dump,check,schema} ...
+
+Do things with gifnoc configurations.
+
+positional arguments:
+  {dump,check,schema}
+    dump                Dump configuration.
+    check               Check configuration (true/false).
+    schema              Dump JSON schema.
+
+options:
+  -h, --help            show this help message and exit
+  --module MODULE, -m MODULE
+                        Module(s) with the configuration definition(s)
+  --config CONFIG, -c CONFIG
+                        Configuration file(s) to load.
+  --ignore-env          Ignore mappings from environment variables.
+
+===

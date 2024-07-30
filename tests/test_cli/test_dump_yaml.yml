@@ -1,0 +1,17 @@
+org:
+  machines:
+  - name: turbo01
+    ngpus: 32
+    os: Bubuntu
+  - name: turbo02
+    ngpus: 32
+    os: Bubuntu
+  members:
+  - end: null
+    name: Olivier Breuleux
+    start: '2017-06-01'
+    username: breuleuo
+  name: mila
+  nonprofit: true
+  passwords:
+    breuleuo: password123

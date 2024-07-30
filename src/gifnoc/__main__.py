@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 from importlib import import_module
 
 from apischema import serialize
@@ -55,7 +56,9 @@ def command_schema(options, sources):
         print(json.dumps(schema, indent=4))
 
 
-def main():
+def main(argv=None):
+    sys.path.insert(0, os.path.abspath(os.curdir))
+
     parser = argparse.ArgumentParser(description="Do things with gifnoc configurations.")
     parser.add_argument(
         "--module",
@@ -83,7 +86,7 @@ def main():
 
     dump = subparsers.add_parser("dump", help="Dump configuration.")
     dump.add_argument("SUBPATH", help="Subpath to dump", nargs="?", default=None)
-    dump.add_argument("--format", "-f", help="Dump format", default="raw")
+    dump.add_argument("--format", "-f", help="Dump format", default="json")
 
     dump = subparsers.add_parser("check", help="Check configuration (true/false).")
     dump.add_argument("SUBPATH", help="Subpath to check", nargs="?", default=None)
@@ -91,7 +94,7 @@ def main():
     schema = subparsers.add_parser("schema", help="Dump JSON schema.")
     schema.add_argument("SUBPATH", help="Subpath to get a schema for", nargs="?", default=None)
 
-    options = parser.parse_args()
+    options = parser.parse_args(args=argv or sys.argv[1:])
 
     from_env = os.environ.get("GIFNOC_MODULE", None)
     from_env = from_env.split(",") if from_env else []

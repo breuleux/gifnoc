@@ -1,8 +1,5 @@
 from . import config  # noqa: F401
-from .arg import (  # noqa: F401
-    Command,
-    Option,
-)
+from .arg import Command, Option  # noqa: F401
 from .interface import (  # noqa: F401
     cli,
     current_configuration,
@@ -14,8 +11,6 @@ from .interface import (  # noqa: F401
     register,
     use,
 )
-from .registry import (  # noqa: F401
-    Configuration,
-    active_configuration,
-)
+from .registry import Configuration, active_configuration  # noqa: F401
 from .type_wrappers import Extensible, TaggedSubclass  # noqa: F401
+from .version import version  # noqa: F401

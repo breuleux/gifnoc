@@ -1,0 +1,89 @@
+$defs: {}
+$schema: http://json-schema.org/draft/2020-12/schema#
+additionalProperties: false
+properties:
+  org:
+    additionalProperties: false
+    properties:
+      machines:
+        description: Machines the organization owns
+        items:
+          additionalProperties: false
+          properties:
+            name:
+              title: Name
+              type: string
+            ngpus:
+              title: Ngpus
+              type: integer
+            os:
+              title: Os
+              type: string
+          required:
+          - name
+          - os
+          - ngpus
+          type: object
+        title: Machines
+        type: array
+      members:
+        description: Members of the organization
+        items:
+          additionalProperties: false
+          properties:
+            end:
+              description: Date the member stopped working
+              format: date
+              title: End
+              type:
+              - string
+              - 'null'
+            home:
+              description: Home directory
+              title: Home
+              type: string
+            name:
+              description: Member name
+              title: Name
+              type: string
+            start:
+              description: Date the member started working
+              format: date
+              title: Start
+              type: string
+            username:
+              description: User name
+              title: Username
+              type: string
+          required:
+          - name
+          - username
+          - home
+          - start
+          - end
+          type: object
+        title: Members
+        type: array
+      name:
+        description: Name of the organization
+        title: Name
+        type: string
+      nonprofit:
+        description: Whether the organization is a nonprofit
+        title: Nonprofit
+        type: boolean
+      passwords:
+        additionalProperties:
+          type: string
+        default: {}
+        description: User passwords
+        title: Passwords
+        type: object
+    required:
+    - name
+    - nonprofit
+    - members
+    - machines
+    title: Org
+    type: object
+type: object
