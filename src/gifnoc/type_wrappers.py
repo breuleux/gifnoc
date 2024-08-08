@@ -1,6 +1,6 @@
 import importlib
 from collections import deque
-from typing import TYPE_CHECKING, Annotated, Any, Type, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
 from apischema import (
     ValidationError,
@@ -21,14 +21,18 @@ wrapper_cache = {}
 
 
 class _WrapperBase:
-    def __class_getitem__(cls, item: Type[T]) -> Type[T]:
+    def __class_getitem__(cls, items):
+        if not isinstance(items, tuple):
+            items = (items,)
         name = cls.__name__.lstrip("_")
-        key = (cls, item)
+        key = (cls, items)
         if key not in wrapper_cache:
+            pthru, *others = items
+            item_names = ",".join(item.__name__ for item in items)
             typ = type(
-                f"{name}[{item.__name__}]",
+                f"{name}[{item_names}]",
                 (cls,),
-                {"__passthrough__": item, "__wrapper__": cls},
+                {"__passthrough__": pthru, "__type_args__": others, "__wrapper__": cls},
             )
             wrapper_cache[key] = typ
             deserializer(Conversion(typ._deserialize, source=dict[str, Any], target=typ))

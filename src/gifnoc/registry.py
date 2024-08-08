@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import MISSING, dataclass, field, fields, is_dataclass, make_dataclass
-from functools import partial
 from typing import Any, Callable, Optional, Type, TypeVar
 
 from apischema import ValidationError, deserialize
@@ -146,7 +145,7 @@ class Registry:
         self.envmap = {}
         self.version = 0
 
-    def register(self, path, cls=None, default_factory=None):
+    def register(self, path, cls, default_factory=None):
         def reg(hierarchy, path, key, cls):
             root, *rest = key.split(".", 1)
             rest = rest[0] if rest else None
@@ -165,10 +164,7 @@ class Registry:
             else:
                 self.version += 1
 
-        if cls is None:
-            return partial(reg, self.hierarchy, [], path)
-        else:
-            return reg(self.hierarchy, [], path, cls)
+        return reg(self.hierarchy, [], path, cls)
 
     def model(self):
         return self.hierarchy.build()

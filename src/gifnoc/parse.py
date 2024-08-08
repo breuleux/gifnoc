@@ -50,7 +50,7 @@ try:
     import yaml
 
     yaml.SafeLoader.add_constructor("!delete", lambda loader, node: DELETE)
-except ImportError:
+except ImportError:  # pragma: no cover
     yaml = MissingProxy(
         ImportError("The yaml format is not available; install the pyyaml package")
     )
