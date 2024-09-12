@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 
-import gifnoc
 import pytest
+
+import gifnoc
 from gifnoc.std import time
 
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+
 from gifnoc.__main__ import main
 
 here = Path(__file__).parent

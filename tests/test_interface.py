@@ -3,8 +3,9 @@ import sys
 from functools import partial
 from unittest import mock
 
-import gifnoc
 import pytest
+
+import gifnoc
 from gifnoc.arg import Command
 from gifnoc.parse import EnvironMap
 from gifnoc.utils import ConfigurationError

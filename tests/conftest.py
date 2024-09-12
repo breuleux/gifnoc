@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 from gifnoc.registry import Registry
 
 from .models import Organization
