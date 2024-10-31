@@ -19,7 +19,7 @@ def _run_on_org(*args, config=True):
     return subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 10), reason="Python 3.10 changed format")
+@pytest.mark.skipif(sys.version_info < (3, 13), reason="Python 3.10, then 3.13, changed format")
 def test_help(capsys, file_regression):
     with pytest.raises(SystemExit):
         main(["-h"])
