@@ -131,7 +131,7 @@ wheels = [
 
 [[package]]
 name = "gifnoc"
-version = "0.3.5"
+version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "apischema" },
@@ -149,7 +149,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "apischema", specifier = ">=0.18.1" },
-    { name = "ovld", specifier = "~=0.4.0" },
+    { name = "ovld", specifier = "~=0.4.6" },
 ]
 
 [package.metadata.requires-dev]
@@ -171,11 +171,11 @@ wheels = [
 
 [[package]]
 name = "ovld"
-version = "0.4.0"
+version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/cc/c5/e83081da3e6551825cc73c97d8ae2daec5bcc1c24cc3353631ae6df6b587/ovld-0.4.0.tar.gz", hash = "sha256:499803a67c4c05f9881185b06245f706ad58573a8f7f8c6666287edfb3102e52", size = 1007430 }
+sdist = { url = "https://files.pythonhosted.org/packages/52/84/3e01357e154af0fbae0d8b1e1b15c2020895640e863e1d4fdccc6573ee32/ovld-0.4.6.tar.gz", hash = "sha256:7891086d04e34641a11d8088f28426b4a55971f54f55b7f5278739e3a8927168", size = 1166577 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/27/eb/00c38109251d5785611ccb609754a5619bdf6ac24d3287a8c299c0553675/ovld-0.4.0-py3-none-any.whl", hash = "sha256:4b99005b338c092ea1c5fe24da8b5adb4419f02f9706fd31c1b0b27568a10099", size = 27667 },
+    { url = "https://files.pythonhosted.org/packages/d2/ea/ca0dbbd39b35611076c1e353b3dd0f57b32f74d961d6c4e360db78155535/ovld-0.4.6-py3-none-any.whl", hash = "sha256:097764be018fae98a6baf15e209bd1df5da1643ece40ef7fc59a0313d2a96e88", size = 30912 },
 ]
 
 [[package]]

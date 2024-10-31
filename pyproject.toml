@@ -6,7 +6,7 @@ authors = [
     { name = "Olivier Breuleux", email = "breuleux@gmail.com" }
 ]
 dependencies = [
-    "ovld~=0.4.0",
+    "ovld~=0.4.6",
     "apischema>=0.18.1",
 ]
 license = "MIT"

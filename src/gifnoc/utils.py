@@ -1,18 +1,10 @@
 from dataclasses import fields, is_dataclass
-from typing import Union
 
 from apischema.conversions.converters import default_deserialization
 from apischema.conversions.utils import converter_types
+from ovld.types import UnionTypes
 
 from .docstrings import get_attribute_docstrings
-
-try:
-    from types import UnionType
-
-    UnionTypes = (type(Union[int, str]), UnionType)
-
-except ImportError:
-    UnionTypes = (type(Union[int, str]),)
 
 
 class ConfigurationError(Exception):
