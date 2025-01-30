@@ -122,7 +122,7 @@ def acquire(model: type[str], s: str, context: EnvContext):  # noqa: F811
 
 
 @ovld
-def acquire(model: type[Path], s: str | Path, context: FileContext):  # noqa: F811
+def acquire(model: type[Path], s: Union[str, Path], context: FileContext):  # noqa: F811
     return str(((context.path or ".") / s).resolve())
 
 
