@@ -2,12 +2,10 @@
     "type": "object",
     "properties": {
         "x": {
-            "type": "number",
-            "title": "X"
+            "type": "number"
         },
         "y": {
-            "type": "number",
-            "title": "Y"
+            "type": "number"
         }
     },
     "required": [
@@ -15,6 +13,5 @@
         "y"
     ],
     "additionalProperties": true,
-    "$schema": "http://json-schema.org/draft/2020-12/schema#",
-    "$defs": {}
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

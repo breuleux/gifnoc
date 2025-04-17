@@ -1,9 +1,4 @@
-import json
-
-from apischema import deserialize, serialize
-
-from gifnoc.schema import deserialization_schema
-from gifnoc.type_wrappers import Extensible, TaggedSubclass
+from serieux import Extensible, TaggedSubclass, deserialize, schema, serialize
 
 from .models import Point, Point3D, Point4D
 
@@ -26,8 +21,8 @@ def test_TaggedSubclass_representation(data_regression):
 
 
 def test_TaggedSubclass_schema(file_regression):
-    schema = deserialization_schema(TaggedSubclass[Point])
-    file_regression.check(json.dumps(schema, indent=4), extension=".json")
+    sch = schema(TaggedSubclass[Point])
+    file_regression.check(sch.json(), extension=".json")
 
 
 def test_Extensible():
@@ -46,5 +41,5 @@ def test_Extensible():
 
 
 def test_Extensible_schema(file_regression):
-    schema = deserialization_schema(Extensible[Point])
-    file_regression.check(json.dumps(schema, indent=4), extension=".json")
+    sch = schema(Extensible[Point])
+    file_regression.check(sch.json(), extension=".json")
