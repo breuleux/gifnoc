@@ -2,8 +2,9 @@ import time as stdtime
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from ..interface import define
-from ..type_wrappers import TaggedSubclass
+from serieux import TaggedSubclass
+
+from .. import define
 
 
 @dataclass
@@ -11,7 +12,7 @@ class NormalTime:
     def now(self):
         return datetime.now()
 
-    def sleep(self, seconds):
+    def sleep(self, seconds):  # pragma: no cover
         stdtime.sleep(seconds)
 
 
@@ -27,7 +28,7 @@ class FrozenTime(NormalTime):
         return self.time
 
     def sleep(self, seconds):
-        if self.sleep_beat:
+        if self.sleep_beat:  # pragma: no cover
             stdtime.sleep(self.sleep_beat)
         self.time += timedelta(seconds=seconds)
 

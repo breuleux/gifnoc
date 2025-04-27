@@ -1,7 +1,7 @@
 import importlib
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from ._time import time  # noqa: F401
 
 else:

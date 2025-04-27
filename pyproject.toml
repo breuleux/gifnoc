@@ -6,12 +6,12 @@ authors = [
     { name = "Olivier Breuleux", email = "breuleux@gmail.com" }
 ]
 dependencies = [
-    "ovld~=0.4.6",
-    "apischema>=0.18.1",
+    "ovld~=0.5.1",
+    "serieux>=0.0.3",
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">= 3.9"
+requires-python = ">= 3.11"
 
 [project.urls]
 Homepage = "https://github.com/breuleux/gifnoc"

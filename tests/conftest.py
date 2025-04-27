@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from pathlib import Path
 
 import pytest
@@ -16,7 +17,7 @@ def configs():
 
 @pytest.fixture
 def registry():
-    return Registry()
+    return Registry(context_var=ContextVar("active", default=None))
 
 
 @pytest.fixture
@@ -24,8 +25,8 @@ def org(registry):
     return registry.define(
         field="org",
         model=Organization,
-        environ={
-            "ORG_NAME": "name",
-            "NONPROFIT": "nonprofit",
+        defaults={
+            "name": "${env:ORG_NAME}",
+            "nonprofit": "${env:NONPROFIT}",
         },
     )
