@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 from dataclasses import dataclass
 from unittest import mock
 
@@ -76,3 +78,19 @@ def test_cli_with_mapping(org, registry, configs):
         argv=["--config", pth, "-n", "blabb"],
     )
     assert org.name == "blabb"
+
+
+def test_exception_hook(configs, file_regression):
+    result = subprocess.run(
+        [sys.executable, str(configs / "bad_config_script.py")],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    header = "============================= Configuration error =============================="
+    stderr = result.stderr
+    assert header in stderr
+    below = stderr.split(header, 1)[1]
+    below = below.replace(str(configs), "REDACTED")
+    file_regression.check(below)
