@@ -26,6 +26,7 @@ def custom_excepthook(exc_type, exc_value, exc_traceback):
             if spec and (spec.startswith("gifnoc") or spec == "contextlib"):
                 tb.tb_next = None
                 break
+            tb = tb.tb_next
 
         print(
             "============================= Configuration error ==============================",

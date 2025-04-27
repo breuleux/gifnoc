@@ -1,0 +1,7 @@
+
+  File "REDACTED/bad_config_script.py", line 13, in <module>
+    with use({"test": {"value": "not-a-boolean"}}):
+         ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+================================================================================
+[#0] [1m[33m.test.value[0m: Cannot deserialize string 'not-a-boolean' into expected type 'bool'.
+================================================================================
