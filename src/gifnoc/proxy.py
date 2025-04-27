@@ -1,4 +1,4 @@
-from .interface import current_configuration
+from serieux.features.partial import NOT_GIVEN
 
 
 class MissingConfigurationError(Exception):
@@ -6,13 +6,15 @@ class MissingConfigurationError(Exception):
 
 
 class Proxy:
-    def __init__(self, *pth):
+    def __init__(self, registry, pth):
+        self._context_var = registry.context_var
+        self._registry = registry
         self._pth = pth
         self._cached_data = None
         self._cached = None
 
     def _obj(self):
-        container = current_configuration()
+        container = self._context_var.get() or self._registry.global_config
         if container is None:  # pragma: no cover
             raise MissingConfigurationError("No configuration was loaded.")
         root = cfg = container.data
@@ -24,6 +26,8 @@ class Proxy:
                     cfg = cfg[k]
                 elif isinstance(cfg, list):
                     cfg = cfg[int(k)]
+                elif cfg is NOT_GIVEN:
+                    raise AttributeError(f"There is no configuration at '{self.pth}'")
                 else:
                     cfg = getattr(cfg, k)
             self._cached_data = root
@@ -42,4 +46,8 @@ class Proxy:
     def __getattr__(self, attr):
         if attr.startswith("__") and attr.endswith("__"):
             raise AttributeError(attr)
+        obj = self._obj()
+        if obj is NOT_GIVEN:
+            p = ".".join(self._pth)
+            raise AttributeError(f"There is no configuration at '{p}'")
         return getattr(self._obj(), attr)

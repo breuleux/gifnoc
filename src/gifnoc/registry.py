@@ -1,33 +1,43 @@
+import os
+import random
+import string
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import MISSING, dataclass, field, fields, is_dataclass, make_dataclass
-from typing import Any, Callable, Optional, Type, TypeVar
+from dataclasses import dataclass, field, fields, make_dataclass
+from pathlib import Path
+from typing import Optional, Type, TypeVar
 
-from apischema import ValidationError, deserialize
+from serieux import (
+    DottedNotation,
+    FromFileExtra,
+    Serieux,
+    Sources,
+    Variables,
+    WorkingDirectory,
+    parse_cli,
+)
+from serieux.features.dotted import unflatten
+from serieux.features.partial import NOT_GIVEN
 
-from .acquire import parse_sources
-from .type_wrappers import Extensible
-from .utils import ConfigurationError
+from .proxy import Proxy
 
 _T = TypeVar("_T")
 
 
-active_configuration = ContextVar("active_configuration", default=None)
-global_configuration = None
+deserialize = (Serieux + FromFileExtra + DottedNotation)().deserialize
 
 
 class Configuration:
     """Hold configuration base dict and built configuration.
 
-    Configuration objects act as context managers, setting the
-    ``gifnoc.active_configuration`` context variable. All code that
+    Configuration objects act as context managers, setting a context variable
+    pointing to the current configuration. All code that
     runs from within the ``with`` block will thus have access to that
-    specific configuration through ``gifnoc.config``.
+    specific configuration through the return value of ``gifnoc.define``.
 
     Attributes:
         sources: The data sources used to populate the configuration.
         registry: The registry to use for the data model.
-        base: The configuration serialized as a dictionary.
         data: The deserialized configuration object, with the proper
             types.
     """
@@ -35,20 +45,18 @@ class Configuration:
     def __init__(self, sources, registry):
         self.sources = sources
         self.registry = registry
-        self.base = None
         self._data = None
         self._model = None
         self.version = None
 
     def refresh(self):
         self._model = model = self.registry.model()
-        dct = parse_sources(model, *self.sources)
-        dct = {f.name: dct[f.name] for f in fields(model) if f.name in dct}
-        try:
-            self._data = deserialize(model, dct, pass_through=lambda x: x is not Any)
-        except ValidationError as exc:
-            raise ConfigurationError(exc.errors) from None
-        self.base = dct
+        defaults = unflatten(self.registry.defaults)
+        self._data = deserialize(
+            model,
+            Sources(defaults, *self.sources),
+            Variables() + WorkingDirectory(directory=Path(os.getcwd())),
+        )
         self.version = self.registry.version
 
     @property
@@ -62,7 +70,7 @@ class Configuration:
 
     def __enter__(self):
         try:
-            self._token = active_configuration.set(self)
+            self._token = self.registry.context_var.set(self)
             data = self.data
             for f in fields(self._model):
                 value = getattr(data, f.name, None)
@@ -70,12 +78,12 @@ class Configuration:
                     value.__enter__()
             return data
         except Exception:
-            active_configuration.reset(self._token)
+            self.registry.context_var.reset(self._token)
             self._token = None
             raise
 
     def __exit__(self, exct, excv, tb):
-        active_configuration.reset(self._token)
+        self.registry.context_var.reset(self._token)
         data = self.data
         for f in fields(self._model):
             value = getattr(data, f.name, None)
@@ -84,24 +92,12 @@ class Configuration:
         self._token = None
 
 
-def get_default_factory(cls, default_factory=None):
-    cls = getattr(cls, "__passthrough__", cls)
-    if default_factory is None and is_dataclass(cls):
-        if all(
-            field.default is not MISSING or field.default_factory is not MISSING
-            for field in fields(cls)
-        ):
-            default_factory = cls
-        return default_factory or (lambda: None)
-
-
 @dataclass
 class RegisteredConfig:
     path: str
     key: str
     cls: type
     wrapper: Optional[type] = None
-    default_factory: Optional[Callable[[], object]] = None
     extras: dict[str, "RegisteredConfig"] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -114,14 +110,10 @@ class RegisteredConfig:
             dc = self.cls
         else:
             dc = make_dataclass(
-                cls_name=self.path,
+                cls_name=self.path or "GIFNOC_ROOT",
                 bases=(self.cls,),
                 fields=[
-                    (
-                        name,
-                        built := cfg.build(),
-                        field(default_factory=get_default_factory(built, cfg.default_factory)),
-                    )
+                    (name, cfg.build(), field(default=NOT_GIVEN))
                     for name, cfg in self.extras.items()
                 ],
             )
@@ -136,16 +128,18 @@ class Root:
 
 
 class Registry:
-    def __init__(self):
+    def __init__(self, context_var=None):
         self.hierarchy = RegisteredConfig(
             path="",
             key=None,
             cls=Root,
         )
-        self.envmap = {}
+        self.context_var = context_var or ContextVar("active_configuration", default=None)
+        self.global_config = None
+        self.defaults = {}
         self.version = 0
 
-    def register(self, path, cls, default_factory=None):
+    def register(self, path, cls):
         def reg(hierarchy, path, key, cls):
             root, *rest = key.split(".", 1)
             rest = rest[0] if rest else None
@@ -155,8 +149,7 @@ class Registry:
                 hierarchy.extras[root] = RegisteredConfig(
                     path=".".join(path),
                     key=root,
-                    cls=Extensible[Root] if rest else cls,
-                    default_factory=default_factory,
+                    cls=Root if rest else cls,
                 )
 
             if rest:
@@ -169,13 +162,12 @@ class Registry:
     def model(self):
         return self.hierarchy.build()
 
-    def map_environment_variables(self, **mapping):
-        for (
-            envvar,
-            path,
-        ) in mapping.items():
-            self.envmap[envvar] = path.split(".")
-        self.version += 1
+    @contextmanager
+    def overlay(self, *sources):
+        """Use a configuration."""
+        existing = self.context_var.get()
+        with existing.overlay(sources) as container:
+            yield container
 
     @contextmanager
     def use(self, *sources):
@@ -184,30 +176,61 @@ class Registry:
         with container:
             yield container
 
-    def load(self, *sources):
-        container = Configuration(sources=sources, registry=self)
-        return container
-
-    def load_global(self, *sources):
-        global global_configuration
-
-        container = Configuration(sources=sources, registry=self)
+    def set_sources(self, *sources):
+        container = Configuration(sources, self)
+        self.global_config = container
         container.__enter__()
-        global_configuration = container
-        return container
+
+    def add_overlay(self, *sources):
+        existing = self.context_var.get()
+        if not existing:
+            self.set_sources(*sources)
+        else:
+            container = existing.overlay(sources)
+            self.global_config = container
+            container.__enter__()
 
     def define(
         self,
         field: str,
         model: Type[_T],
-        environ: Optional[dict] = None,
-        default_factory=None,
+        defaults: Optional[dict] = None,
     ) -> _T:
-        from .config import _Proxy
-
-        # The typing is a little bit of a lie since we're returning a _Proxy object,
+        # The typing is a little bit of a lie since we're returning a Proxy object,
         # but it works just the same.
-        self.register(field, model, default_factory=default_factory)
-        if environ:
-            self.map_environment_variables(**{k: f"{field}.{v}" for k, v in environ.items()})
-        return _Proxy(*field.split("."))
+        self.defaults[field] = defaults or {}
+        self.register(field, model)
+        return Proxy(self, field.split("."))
+
+    def cli(self, type: Optional[type[_T]] = None, *, field=None, mapping=None, argv=None) -> _T:
+        if mapping is None:
+            mapping = {}
+
+        if field is None:
+            field = "_cli_" + "".join(random.choices(string.ascii_lowercase, k=8))
+
+        mangled_mapping = {}
+
+        if type is not None:
+            mangled_mapping[field] = {"auto": True}
+
+        mangled_mapping[""] = {"option": "--config", "required": False}
+
+        for k, v in mapping.items():
+            k = k.lstrip(".")
+            if k.startswith("$."):
+                k = field + k[1:]
+            mangled_mapping[k] = v
+
+        if type is not None:
+            rval = self.define(field=field, model=type)
+        else:
+            rval = None
+
+        overlay = parse_cli(
+            root_type=self.model(),
+            mapping=mangled_mapping,
+            argv=argv,
+        )
+        self.add_overlay(overlay)
+        return rval
