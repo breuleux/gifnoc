@@ -10,6 +10,7 @@ from typing import Optional, Type, TypeVar
 from serieux import (
     DottedNotation,
     FromFileExtra,
+    Lazy,
     Serieux,
     Sources,
     Variables,
@@ -73,9 +74,8 @@ class Configuration:
             self._token = self.registry.context_var.set(self)
             data = self.data
             for f in fields(self._model):
-                value = getattr(data, f.name, None)
-                if hasattr(value, "__enter__"):
-                    value.__enter__()
+                if hasattr(f.type, "__enter__"):
+                    getattr(data, f.name).__enter__()
             return data
         except Exception:
             self.registry.context_var.reset(self._token)
@@ -86,9 +86,8 @@ class Configuration:
         self.registry.context_var.reset(self._token)
         data = self.data
         for f in fields(self._model):
-            value = getattr(data, f.name, None)
-            if hasattr(value, "__exit__"):
-                value.__exit__(exct, excv, tb)
+            if hasattr(f.type, "__exit__"):
+                getattr(data, f.name).__exit__(exct, excv, tb)
         self._token = None
 
 
@@ -97,13 +96,7 @@ class RegisteredConfig:
     path: str
     key: str
     cls: type
-    wrapper: Optional[type] = None
     extras: dict[str, "RegisteredConfig"] = field(default_factory=dict)
-
-    def __post_init__(self):
-        if hasattr(self.cls, "__passthrough__"):
-            self.wrapper = self.cls.__wrapper__
-            self.cls = self.cls.__passthrough__
 
     def build(self):
         if not self.extras:
@@ -117,8 +110,6 @@ class RegisteredConfig:
                     for name, cfg in self.extras.items()
                 ],
             )
-        if self.wrapper:
-            dc = self.wrapper[dc]
         return dc
 
 
@@ -129,11 +120,7 @@ class Root:
 
 class Registry:
     def __init__(self, context_var=None):
-        self.hierarchy = RegisteredConfig(
-            path="",
-            key=None,
-            cls=Root,
-        )
+        self.hierarchy = RegisteredConfig(path="", key=None, cls=Root)
         self.context_var = context_var or ContextVar("active_configuration", default=None)
         self.global_config = None
         self.defaults = {}
@@ -195,9 +182,12 @@ class Registry:
         field: str,
         model: Type[_T],
         defaults: Optional[dict] = None,
+        lazy: bool = False,
     ) -> _T:
         # The typing is a little bit of a lie since we're returning a Proxy object,
         # but it works just the same.
+        if lazy:
+            model = Lazy[model]
         self.defaults[field] = defaults or {}
         self.register(field, model)
         return Proxy(self, field.split("."))

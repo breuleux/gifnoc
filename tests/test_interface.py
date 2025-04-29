@@ -4,6 +4,9 @@ import sys
 from dataclasses import dataclass
 from unittest import mock
 
+import pytest
+from serieux import ValidationError
+
 
 def test_overlay(org, registry, configs):
     with registry.use(configs / "mila.yaml"):
@@ -45,6 +48,29 @@ def test_envvar_boolean_true(org, registry, configs):
     with registry.use(configs / "mila.yaml", env):
         assert org.name == "mila"
         assert org.nonprofit is True
+
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+
+@dataclass
+class Person:
+    name: str
+    age: int
+
+
+def test_define_lazy(registry):
+    pt = registry.define(field="pt", model=Point, lazy=True)
+    perso = registry.define(field="perso", model=Person, lazy=True)
+
+    with registry.use({"pt": {"x": 1, "y": 2}}):
+        assert pt.x == 1
+        assert pt.y == 2
+        with pytest.raises(ValidationError):
+            perso.name
 
 
 #############
