@@ -10,5 +10,11 @@ class TestConfig:
 
 define("test", TestConfig)
 
-with use({"test": {"value": "not-a-boolean"}}):
-    pass
+
+def main():
+    with use({"test": {"value": "not-a-boolean"}}):
+        pass
+
+
+if __name__ == "__main__":
+    main()

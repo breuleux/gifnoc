@@ -1,5 +1,5 @@
 
-  File "REDACTED/bad_config_script.py", line 13, in <module>
+  File "REDACTED/bad_config_script.py", line 15, in main
     with use({"test": {"value": "not-a-boolean"}}):
          ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ================================================================================

@@ -36,4 +36,5 @@ class FrozenTime(NormalTime):
 time = define(
     field="time",
     model=TaggedSubclass[NormalTime],
+    defaults={},
 )
