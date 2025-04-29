@@ -181,14 +181,15 @@ class Registry:
         self,
         field: str,
         model: Type[_T],
-        defaults: Optional[dict] = None,
+        defaults: Optional[dict] = NOT_GIVEN,
         lazy: bool = False,
     ) -> _T:
         # The typing is a little bit of a lie since we're returning a Proxy object,
         # but it works just the same.
         if lazy:
             model = Lazy[model]
-        self.defaults[field] = defaults or {}
+        if defaults is not NOT_GIVEN:
+            self.defaults[field] = defaults
         self.register(field, model)
         return Proxy(self, field.split("."))
 
@@ -208,8 +209,6 @@ class Registry:
 
         for k, v in mapping.items():
             k = k.lstrip(".")
-            if k.startswith("$."):
-                k = field + k[1:]
             mangled_mapping[k] = v
 
         if type is not None:

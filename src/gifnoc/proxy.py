@@ -26,8 +26,6 @@ class Proxy:
                     cfg = cfg[k]
                 elif isinstance(cfg, list):
                     cfg = cfg[int(k)]
-                elif cfg is NOT_GIVEN:
-                    raise AttributeError(f"There is no configuration at '{self.pth}'")
                 else:
                     cfg = getattr(cfg, k)
             self._cached_data = root
@@ -35,7 +33,7 @@ class Proxy:
             return cfg
         except (KeyError, AttributeError):
             key = ".".join(self._pth)
-            raise MissingConfigurationError(f"No configuration was loaded for key '{key}'.")
+            raise MissingConfigurationError(f"No configuration was found for key '{key}'.")
 
     def __str__(self):
         return f"Proxy for {self._obj()}"
@@ -49,5 +47,5 @@ class Proxy:
         obj = self._obj()
         if obj is NOT_GIVEN:
             p = ".".join(self._pth)
-            raise AttributeError(f"There is no configuration at '{p}'")
+            raise MissingConfigurationError(f"No configuration was found for '{p}'")
         return getattr(self._obj(), attr)

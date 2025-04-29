@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from unittest import mock
 
 import pytest
-from serieux import ValidationError
+
+from gifnoc.proxy import MissingConfigurationError
 
 
 def test_overlay(org, registry, configs):
@@ -69,7 +70,7 @@ def test_define_lazy(registry):
     with registry.use({"pt": {"x": 1, "y": 2}}):
         assert pt.x == 1
         assert pt.y == 2
-        with pytest.raises(ValidationError):
+        with pytest.raises(MissingConfigurationError):
             perso.name
 
 
@@ -104,6 +105,17 @@ def test_cli_with_mapping(org, registry, configs):
         argv=["--config", pth, "-n", "blabb"],
     )
     assert org.name == "blabb"
+
+
+def test_cli_does_an_overlay(org, registry, configs):
+    registry.set_sources(configs / "mila.yaml")
+    registry.cli(
+        mapping={"org.name": "-n"},
+        argv=["-n", "blabb"],
+    )
+    assert org.name == "blabb"
+    assert org.nonprofit is True
+    assert len(org.members) == 1
 
 
 def test_exception_hook(configs, file_regression):
