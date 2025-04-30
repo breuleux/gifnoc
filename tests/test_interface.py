@@ -118,6 +118,7 @@ def test_cli_does_an_overlay(org, registry, configs):
     assert len(org.members) == 1
 
 
+@pytest.mark.skipif(sys.version_info < (3, 13), reason="Python 3.13+ required")
 def test_exception_hook(configs, file_regression):
     result = subprocess.run(
         [sys.executable, str(configs / "bad_config_script.py")],
