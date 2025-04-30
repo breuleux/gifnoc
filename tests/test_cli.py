@@ -29,7 +29,7 @@ def test_help(capsys, file_regression):
 
 
 def test_dump_json(data_regression):
-    results = _run_on_org("dump")
+    results = _run_on_org("dump", "-f", "json")
     data = json.loads(results.stdout)
     m = data["org"]["members"][0]
     assert m["home"].startswith("/")
@@ -38,11 +38,17 @@ def test_dump_json(data_regression):
 
 
 def test_dump_yaml(data_regression):
-    results = _run_on_org("dump", "--format", "yaml")
+    results = _run_on_org("dump")
     data = yaml.safe_load(results.stdout)
     m = data["org"]["members"][0]
     assert m["home"].startswith("/")
     del m["home"]
+    data_regression.check(data)
+
+
+def test_dump_subpath(data_regression):
+    results = _run_on_org("dump", "org.machines", "-f", "json")
+    data = json.loads(results.stdout)
     data_regression.check(data)
 
 
@@ -66,5 +72,11 @@ def test_check_nonexistent():
 
 def test_schema(data_regression):
     results = _run_on_org("schema", config=False)
+    data = json.loads(results.stdout)
+    data_regression.check(data)
+
+
+def test_schema_subpath(data_regression):
+    results = _run_on_org("schema", "org.members", config=False)
     data = json.loads(results.stdout)
     data_regression.check(data)
