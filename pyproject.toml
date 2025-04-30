@@ -6,8 +6,8 @@ authors = [
     { name = "Olivier Breuleux", email = "breuleux@gmail.com" }
 ]
 dependencies = [
-    "ovld~=0.5.1",
-    "serieux>=0.0.3",
+    "ovld~=0.5.3",
+    "serieux>=0.0.5",
 ]
 license = "MIT"
 readme = "README.md"
