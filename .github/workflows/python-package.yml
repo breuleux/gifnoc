@@ -31,16 +31,12 @@ jobs:
     strategy:
       matrix:
         settings:
-        - python: '3.9'
-          coverage: false
-        - python: '3.10'
-          coverage: false
         - python: '3.11'
           coverage: false
         - python: '3.12'
           coverage: false
         - python: '3.13'
-          coverage: false
+          coverage: true
     steps:
     - name: Check out the code
       uses: actions/checkout@v3
