@@ -66,6 +66,12 @@ class Configuration:
             self.refresh()
         return self._data
 
+    @property
+    def model(self):
+        if not self._model or self.registry.version > self.version:  # pragma: no cover
+            self.refresh()
+        return self._model
+
     def overlay(self, sources):
         return Configuration([*self.sources, *sources], self.registry)
 
@@ -148,6 +154,10 @@ class Registry:
 
     def model(self):
         return self.hierarchy.build()
+
+    def current(self):
+        container = self.context_var.get() or self.global_config
+        return container
 
     @contextmanager
     def overlay(self, *sources):

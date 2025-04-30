@@ -1,0 +1,31 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+items:
+  additionalProperties: false
+  properties:
+    end:
+      description: Date the member stopped working
+      oneOf:
+      - format: date
+        type: string
+      - type: 'null'
+    home:
+      description: Home directory
+      type: string
+    name:
+      description: Member name
+      type: string
+    start:
+      description: Date the member started working
+      format: date
+      type: string
+    username:
+      description: User name
+      type: string
+  required:
+  - name
+  - username
+  - home
+  - start
+  - end
+  type: object
+type: array

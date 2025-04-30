@@ -1,0 +1,6 @@
+- name: turbo01
+  ngpus: 32
+  os: Bubuntu
+- name: turbo02
+  ngpus: 32
+  os: Bubuntu

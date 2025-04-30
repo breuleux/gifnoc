@@ -1,134 +1,144 @@
-import argparse
+import importlib
 import json
 import os
 import sys
-from importlib import import_module
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Mapping, Sequence
 
-from apischema import serialize
+import yaml
+from serieux import CommandLineArguments, TaggedUnion, deserialize, schema, serialize
+from serieux.model import field_at
 
-from .interface import global_registry, use
-from .parse import EnvironMap, extensions
-from .schema import deserialization_schema
-from .utils import get_at_path, type_at_path
-
-
-def extract(options, sources):
-    with use(*sources()) as cfg:
-        data = cfg.data
-        if options.SUBPATH:
-            data = get_at_path(data, options.SUBPATH.split("."))
-        return data
+from gifnoc import add_overlay, global_registry
 
 
-def command_dump(options, sources):
-    data = extract(options, sources)
-    ser = serialize(data)
-    if options.format == "raw":
-        print(ser)
-    else:
-        fmt = f".{options.format}"
-        if fmt not in extensions:
-            exit(f"Cannot dump to '{options.format}' format")
+def value_at(data, path):
+    for part in path.split("."):
+        if isinstance(data, Sequence):
+            data = data[int(part)]
+        elif isinstance(data, Mapping):  # pragma: no cover
+            data = data[part]
         else:
-            print(extensions[fmt].dump(ser))
+            data = getattr(data, part)
+    return data
 
 
-def command_check(options, sources):
-    try:
-        data = extract(options, sources)
-    except AttributeError:
-        print("nonexistent")
-        exit(2)
-    if data:
-        print("true")
-        exit(0)
-    elif not data:
-        print("false")
-        exit(1)
+def model_at(model, path):
+    model = field_at(model, path)
+    if model is None:  # pragma: no cover
+        sys.exit(f"No model found at {path!r}")
+    return model.type
 
 
-def command_schema(options, sources):
-    with use(*sources(require=False)) as cfg:
-        cfg_type = type(cfg.data)
-        if options.SUBPATH:
-            cfg_type, _ = type_at_path(cfg_type, options.SUBPATH.split("."))
-        schema = deserialization_schema(cfg_type)
-        print(json.dumps(schema, indent=4))
+@dataclass
+class Dump:
+    """Dump configuration."""
+
+    subpath: str = field(default=None, metadata={"argparse": {"positional": True}})
+    format: str = field(default="yaml", metadata={"argparse": {"alias": "-f"}})
+
+    def __call__(self):
+        container = global_registry.current()
+        data = container.data
+        model = container.model
+
+        if self.subpath:
+            model = model_at(model, self.subpath)
+            data = value_at(data, self.subpath)
+
+        serialized = serialize(model, data)
+        if self.format == "raw":  # pragma: no cover
+            dmp = str(serialized)
+        elif self.format == "yaml":
+            dmp = yaml.safe_dump(serialized)
+        elif self.format == "json":
+            dmp = json.dumps(serialized, indent=4)
+        else:  # pragma: no cover
+            sys.exit(f"Unsupported dump format: {format}")
+        print(dmp)
+
+
+@dataclass
+class Check:
+    """Check configuration (true/false)."""
+
+    subpath: str = field(default=None, metadata={"argparse": {"positional": True}})
+
+    def __call__(self):
+        container = global_registry.current()
+        data = container.data
+
+        try:
+            data = value_at(data, self.subpath)
+        except AttributeError:
+            print("nonexistent")
+            exit(2)
+
+        if data:
+            print("true")
+            exit(0)
+        elif not data:
+            print("false")
+            exit(1)
+
+
+@dataclass
+class Schema:
+    """Dump JSON schema."""
+
+    subpath: str = field(default=None, metadata={"argparse": {"positional": True}})
+
+    def __call__(self):
+        container = global_registry.current()
+        model = container._model
+        if self.subpath:
+            model = model_at(model, self.subpath)
+        sch = schema(model).compile()
+        print(json.dumps(sch, indent=4))
+
+
+@dataclass
+class GifnocCommand:
+    """Do things with gifnoc configurations."""
+
+    command: TaggedUnion[Dump, Check, Schema]
+
+    # Module(s) with the configuration definition(s)
+    module: list[str] = field(metadata={"argparse": {"alias": "-m", "action": "append"}})
+
+    # Configuration file(s) to load.
+    config: Path = field(default=None, metadata={"argparse": {"alias": "-c"}})
+
+    def __call__(self):
+        sys.path.insert(0, str(Path.cwd()))
+
+        from_env = os.environ.get("GIFNOC_MODULE", None)
+        from_env = from_env.split(",") if from_env else []
+
+        modules = [*from_env, *self.module]
+
+        for mod in modules:
+            importlib.import_module(mod)
+
+        if self.config:
+            add_overlay(self.config)
+        else:
+            add_overlay({})
+            pass
+        self.command()
 
 
 def main(argv=None):
-    sys.path.insert(0, os.path.abspath(os.curdir))
+    if argv is None:
+        argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description="Do things with gifnoc configurations.")
-    parser.add_argument(
-        "--module",
-        "-m",
-        action="append",
-        help="Module(s) with the configuration definition(s)",
-        default=[],
+    cmd = deserialize(
+        GifnocCommand,
+        CommandLineArguments(arguments=argv),
     )
-    parser.add_argument(
-        "--config",
-        "-c",
-        dest="config",
-        metavar="CONFIG",
-        action="append",
-        default=[],
-        help="Configuration file(s) to load.",
-    )
-    parser.add_argument(
-        "--ignore-env",
-        action="store_true",
-        help="Ignore mappings from environment variables.",
-    )
-
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    dump = subparsers.add_parser("dump", help="Dump configuration.")
-    dump.add_argument("SUBPATH", help="Subpath to dump", nargs="?", default=None)
-    dump.add_argument("--format", "-f", help="Dump format", default="json")
-
-    dump = subparsers.add_parser("check", help="Check configuration (true/false).")
-    dump.add_argument("SUBPATH", help="Subpath to check", nargs="?", default=None)
-
-    schema = subparsers.add_parser("schema", help="Dump JSON schema.")
-    schema.add_argument("SUBPATH", help="Subpath to get a schema for", nargs="?", default=None)
-
-    options = parser.parse_args(args=argv or sys.argv[1:])
-
-    from_env = os.environ.get("GIFNOC_MODULE", None)
-    from_env = from_env.split(",") if from_env else []
-
-    modules = [*from_env, *options.module]
-
-    if not modules:
-        exit(
-            "You must specify at least one module to source models with,"
-            " either with -m, --module or $GIFNOC_MODULE."
-        )
-
-    for modpath in modules:
-        import_module(modpath)
-
-    def build_sources(require=True):
-        if options.ignore_env:
-            from_env = []
-        else:
-            from_env = os.environ.get("GIFNOC_FILE", None)
-            from_env = from_env.split(",") if from_env else []
-
-        sources = [*from_env, *options.config]
-        if not options.ignore_env:
-            sources.append(EnvironMap(environ=os.environ, map=global_registry.envmap))
-
-        if not sources and require:
-            exit("Please provide at least one config source.")
-
-        return sources
-
-    command = globals()[f"command_{options.command}"]
-    command(options, build_sources)
+    cmd()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
