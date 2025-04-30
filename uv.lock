@@ -86,7 +86,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "ovld", specifier = "~=0.5.3" },
-    { name = "serieux", specifier = ">=0.0.5" },
+    { name = "serieux", specifier = ">=0.0.6" },
 ]
 
 [package.metadata.requires-dev]
@@ -236,15 +236,15 @@ wheels = [
 
 [[package]]
 name = "serieux"
-version = "0.0.5"
+version = "0.0.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ovld" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/44/9231e825babb7a8c63b2cb90a9f08bdeea8704dd7627a129174de4a0c6b8/serieux-0.0.5.tar.gz", hash = "sha256:1f4191a33975e0f5ef8a8e13735fa2c41ecaa9e7b75e1edda35a494ebeae7083", size = 88154 }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/ce/568328b2d9b8075eee627a5d1e018cab2ae96aeecce42a298b786113aa7b/serieux-0.0.6.tar.gz", hash = "sha256:dbb80022421d986aaeae4ed952877ba5e100f7516cc5b0e705b9d3b8e64ca9f5", size = 88182 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/d8/fd71447d2e5afd0dc8c5e00c461193ae092932a6fdf9a22c69e9567428b5/serieux-0.0.5-py3-none-any.whl", hash = "sha256:6bc5ff05ee41edc4ec581a6681920ef58cd7a70503861ccb920c26bffae4baa2", size = 33964 },
+    { url = "https://files.pythonhosted.org/packages/6e/b2/23aeced10c1f8887851e5928e703a60f0c8a6c199dd1f2439aa6532aa2e6/serieux-0.0.6-py3-none-any.whl", hash = "sha256:3f86796582db0e4db979fc8eb7added516b7e99fcb61dd46f6d9451ed6433566", size = 34038 },
 ]
 
 [[package]]
