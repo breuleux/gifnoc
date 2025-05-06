@@ -54,6 +54,9 @@ class Organization:
     # User passwords
     passwords: dict[str, str] = field(default_factory=dict)
 
+    def __call__(self):
+        return self.name * 2
+
 
 @dataclass
 class Person:

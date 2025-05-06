@@ -49,3 +49,6 @@ class Proxy:
             p = ".".join(self._pth)
             raise MissingConfigurationError(f"No configuration was found for '{p}'")
         return getattr(self._obj(), attr)
+
+    def __call__(self, *args, **kwargs):
+        return self._obj()(*args, **kwargs)

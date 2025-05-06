@@ -26,3 +26,6 @@ def test_proxy(org, registry, configs):
 
     assert px("org").__module__ == "gifnoc.proxy"
     assert not hasattr(px("org"), "__xyz__")
+
+    with registry.use(configs / "mila.yaml"):
+        assert px("org")() == "milamila"
