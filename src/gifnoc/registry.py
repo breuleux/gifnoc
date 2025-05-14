@@ -203,7 +203,16 @@ class Registry:
         self.register(field, model)
         return Proxy(self, field.split("."))
 
-    def cli(self, type: Optional[type[_T]] = None, *, field=None, mapping=None, argv=None) -> _T:
+    def cli(
+        self,
+        type: Optional[type[_T]] = None,
+        *,
+        field=None,
+        mapping=None,
+        argv=None,
+        description=None,
+        config_argument=True,
+    ) -> _T:
         if mapping is None:
             mapping = {}
 
@@ -215,7 +224,12 @@ class Registry:
         if type is not None:
             mangled_mapping[field] = {"auto": True}
 
-        mangled_mapping[""] = {"option": "--config", "required": False}
+        if config_argument:
+            mangled_mapping[""] = {
+                "option": "--config",
+                "required": False,
+                "help": "Path to a configuration file",
+            }
 
         for k, v in mapping.items():
             k = k.lstrip(".")
@@ -230,6 +244,7 @@ class Registry:
             root_type=self.model(),
             mapping=mangled_mapping,
             argv=argv,
+            description=description or (type and type.__doc__) or "",
         )
         self.add_overlay(overlay)
         return rval
