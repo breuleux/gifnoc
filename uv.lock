@@ -68,7 +68,7 @@ toml = [
 
 [[package]]
 name = "gifnoc"
-version = "0.4.2"
+version = "0.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "ovld" },
@@ -86,7 +86,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "ovld", specifier = "~=0.5.3" },
-    { name = "serieux", specifier = ">=0.0.6" },
+    { name = "serieux", specifier = ">=0.0.9" },
 ]
 
 [package.metadata.requires-dev]
@@ -108,11 +108,11 @@ wheels = [
 
 [[package]]
 name = "ovld"
-version = "0.5.3"
+version = "0.5.4"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4c/df/dc23bd153887e026348345cc2610aec4fd69c5a554e3e5a8c3afed286365/ovld-0.5.3.tar.gz", hash = "sha256:53666c0ec3ad666ae269eadcfde41ee5b321eff05f2efeee1c5ba19652e933b6", size = 96814 }
+sdist = { url = "https://files.pythonhosted.org/packages/f2/d1/86562ea7e1c9fd50da2ae74465811802fc171912456df380b60f559cab6d/ovld-0.5.4.tar.gz", hash = "sha256:1ed813a13f00de91bf3c4e784327b91525e00cb1905318a44f8a01b705e5d0f3", size = 96844 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4c/7d/50e78aa548b0cc7ecca94eb2f1d2587f7d4948155ad8398c033bf2ecf92b/ovld-0.5.3-py3-none-any.whl", hash = "sha256:2344b0961895fea20b48d863ade2777d57dcd972d67360dd31c19f44640d5238", size = 38515 },
+    { url = "https://files.pythonhosted.org/packages/30/37/3ee0356bdc67f8e63157239c5aec11501da2c1e4b756763143c0df3c64c4/ovld-0.5.4-py3-none-any.whl", hash = "sha256:78f53b1d772a0f2348d8f8f79c6f77e18452e90c46c54b5365d53eb9cbfe0035", size = 38522 },
 ]
 
 [[package]]
@@ -189,14 +189,14 @@ wheels = [
 
 [[package]]
 name = "pytest-timeout"
-version = "2.3.1"
+version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/93/0d/04719abc7a4bdb3a7a1f968f24b0f5253d698c9cc94975330e9d3145befb/pytest-timeout-2.3.1.tar.gz", hash = "sha256:12397729125c6ecbdaca01035b9e5239d4db97352320af155b3f5de1ba5165d9", size = 17697 }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/82/4c9ecabab13363e72d880f2fb504c5f750433b2b6f16e99f4ec21ada284c/pytest_timeout-2.4.0.tar.gz", hash = "sha256:7e68e90b01f9eff71332b25001f85c75495fc4e3a836701876183c4bcfd0540a", size = 17973 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/27/14af9ef8321f5edc7527e47def2a21d8118c6f329a9342cc61387a0c0599/pytest_timeout-2.3.1-py3-none-any.whl", hash = "sha256:68188cb703edfc6a18fad98dc25a3c61e9f24d644b0b70f33af545219fc7813e", size = 14148 },
+    { url = "https://files.pythonhosted.org/packages/fa/b6/3127540ecdf1464a00e5a01ee60a1b09175f6913f0644ac748494d9c4b21/pytest_timeout-2.4.0-py3-none-any.whl", hash = "sha256:c42667e5cdadb151aeb5b26d114aff6bdf5a907f176a007a30b940d3d865b5c2", size = 14382 },
 ]
 
 [[package]]
@@ -236,15 +236,15 @@ wheels = [
 
 [[package]]
 name = "serieux"
-version = "0.0.6"
+version = "0.0.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ovld" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/ce/568328b2d9b8075eee627a5d1e018cab2ae96aeecce42a298b786113aa7b/serieux-0.0.6.tar.gz", hash = "sha256:dbb80022421d986aaeae4ed952877ba5e100f7516cc5b0e705b9d3b8e64ca9f5", size = 88182 }
+sdist = { url = "https://files.pythonhosted.org/packages/19/22/cb108f20e6ace7a99ece97e3fa7af5c8a56d2812dc8af123fb80d9e06e21/serieux-0.0.9.tar.gz", hash = "sha256:1b05c2e648e4475b8e15b072be96897618b63381f31a2656c19fc4c37d2d860a", size = 90622 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/b2/23aeced10c1f8887851e5928e703a60f0c8a6c199dd1f2439aa6532aa2e6/serieux-0.0.6-py3-none-any.whl", hash = "sha256:3f86796582db0e4db979fc8eb7added516b7e99fcb61dd46f6d9451ed6433566", size = 34038 },
+    { url = "https://files.pythonhosted.org/packages/c3/d6/feb9330dcd317329b797e5484a66d4d4c900283eb34bbb928202d1d1853c/serieux-0.0.9-py3-none-any.whl", hash = "sha256:265688643e7e62e6eadc70d9a9771cb1680dd01bc5add0cb26e7472b233f0964", size = 35183 },
 ]
 
 [[package]]

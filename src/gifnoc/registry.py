@@ -9,11 +9,11 @@ from typing import Optional, Type, TypeVar
 
 from serieux import (
     DottedNotation,
+    Environment,
     FromFileExtra,
     Lazy,
     Serieux,
     Sources,
-    Variables,
     WorkingDirectory,
     parse_cli,
 )
@@ -56,7 +56,7 @@ class Configuration:
         self._data = deserialize(
             model,
             Sources(defaults, *self.sources),
-            Variables() + WorkingDirectory(directory=Path(os.getcwd())),
+            Environment() + WorkingDirectory(directory=Path(os.getcwd())),
         )
         self.version = self.registry.version
 
