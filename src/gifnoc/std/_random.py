@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from serieux import TaggedSubclass
 
-from .. import define, staging_registry
+from .. import define
 
 
 @dataclass
@@ -35,12 +35,6 @@ class NormalRandom:
 
 
 random = define(
-    field="random",
-    model=TaggedSubclass[NormalRandom],
-    defaults={},
-)
-
-staging_random = staging_registry.define(
     field="random",
     model=TaggedSubclass[NormalRandom],
     defaults={},
