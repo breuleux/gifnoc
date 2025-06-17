@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field, fields, make_dataclass
 from pathlib import Path
-from typing import Optional, Type, TypeVar
+from typing import Optional, TypeVar
 
 from serieux import (
     DottedNotation,
@@ -190,7 +190,7 @@ class Registry:
     def define(
         self,
         field: str,
-        model: Type[_T],
+        model: type[_T],
         defaults: Optional[dict] = NOT_GIVEN,
         lazy: bool = False,
     ) -> _T:

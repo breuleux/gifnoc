@@ -33,8 +33,10 @@ class FrozenTime(NormalTime):
         self.time += timedelta(seconds=seconds)
 
 
+# The indirection with a type alias helps Pylance, for some reason
+TSNormalTime = TaggedSubclass[NormalTime]
 time = define(
     field="time",
-    model=TaggedSubclass[NormalTime],
+    model=TSNormalTime,
     defaults={},
 )
