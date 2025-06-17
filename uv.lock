@@ -90,7 +90,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "ovld", specifier = "~=0.5.3" },
-    { name = "serieux", specifier = ">=0.0.9" },
+    { name = "serieux", specifier = ">=0.1.0" },
 ]
 
 [package.metadata.requires-dev]
