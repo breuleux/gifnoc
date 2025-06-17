@@ -2,7 +2,7 @@ import importlib
 import json
 import os
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -35,8 +35,13 @@ def model_at(model, path):
 class Dump:
     """Dump configuration."""
 
-    subpath: str = field(default=None, metadata={"argparse": {"positional": True}})
-    format: str = field(default="yaml", metadata={"argparse": {"alias": "-f"}})
+    # Attribute path to follow in the structure
+    # [positional]
+    subpath: str = None
+
+    # Dump format
+    # [alias: -f]
+    format: str = "yaml"
 
     def __call__(self):
         container = global_registry.current()
@@ -63,7 +68,9 @@ class Dump:
 class Check:
     """Check configuration (true/false)."""
 
-    subpath: str = field(default=None, metadata={"argparse": {"positional": True}})
+    # Attribute path to follow in the structure
+    # [positional]
+    subpath: str = None
 
     def __call__(self):
         container = global_registry.current()
@@ -87,7 +94,8 @@ class Check:
 class Schema:
     """Dump JSON schema."""
 
-    subpath: str = field(default=None, metadata={"argparse": {"positional": True}})
+    # [positional]
+    subpath: str = None
 
     def __call__(self):
         container = global_registry.current()
@@ -105,10 +113,13 @@ class GifnocCommand:
     command: TaggedUnion[Dump, Check, Schema]
 
     # Module(s) with the configuration definition(s)
-    module: list[str] = field(metadata={"argparse": {"alias": "-m", "action": "append"}})
+    # [alias: -m]
+    # [action: append]
+    module: list[str]
 
     # Configuration file(s) to load.
-    config: Path = field(default=None, metadata={"argparse": {"alias": "-c"}})
+    # [alias: -c]
+    config: Path = None
 
     def __call__(self):
         sys.path.insert(0, str(Path.cwd()))
