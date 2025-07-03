@@ -22,6 +22,23 @@ def test_empty_config(registry, configs):
         pass
 
 
+def test_proxy(org, registry, configs):
+    orgname = registry.proxy("org.name")
+    with registry.use(configs / "mila.yaml"):
+        assert orgname == "mila"
+        with registry.overlay({"org": {"name": "sekret"}}):
+            assert orgname == "sekret"
+
+
+def test_get(org, registry, configs):
+    with registry.use(configs / "mila.yaml"):
+        assert registry.get().org.name == "mila"
+        orgname = registry.get("org.name")
+        assert orgname == "mila"
+        with registry.overlay({"org": {"name": "sekret"}}):
+            assert orgname == "mila"
+
+
 def test_config_plus_empty(org, registry, configs):
     with registry.use(configs / "mila.yaml", configs / "empty.yaml"):
         assert org.name == "mila"

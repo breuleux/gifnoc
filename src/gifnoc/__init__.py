@@ -8,6 +8,8 @@ from .version import version
 
 global_registry = Registry()
 define = global_registry.define
+proxy = global_registry.proxy
+get = global_registry.get
 use = global_registry.use
 overlay = global_registry.overlay
 set_sources = global_registry.set_sources

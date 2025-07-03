@@ -203,6 +203,16 @@ class Registry:
         self.register(field, model)
         return Proxy(self, field.split("."))
 
+    def proxy(self, field: str):
+        return Proxy(self, field.split("."))
+
+    def get(self, field: Optional[str] = None):
+        if field is None:
+            return self.context_var.get().data
+        else:
+            prox = Proxy(self, field.split("."))
+            return prox._obj()
+
     def cli(
         self,
         type: Optional[type[_T]] = None,

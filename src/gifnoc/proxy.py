@@ -50,5 +50,92 @@ class Proxy:
             raise MissingConfigurationError(f"No configuration was found for '{p}'")
         return getattr(self._obj(), attr)
 
+    def __eq__(self, other):
+        return self._obj() == other
+
+    def __ne__(self, other):  # pragma: no cover
+        return self._obj() != other
+
+    def __lt__(self, other):  # pragma: no cover
+        return self._obj() < other
+
+    def __le__(self, other):  # pragma: no cover
+        return self._obj() <= other
+
+    def __gt__(self, other):  # pragma: no cover
+        return self._obj() > other
+
+    def __ge__(self, other):  # pragma: no cover
+        return self._obj() >= other
+
+    def __hash__(self):  # pragma: no cover
+        return hash(self._obj())
+
+    def __len__(self):  # pragma: no cover
+        return len(self._obj())
+
+    def __getitem__(self, key):  # pragma: no cover
+        return self._obj()[key]
+
+    def __iter__(self):  # pragma: no cover
+        return iter(self._obj())
+
+    def __bool__(self):  # pragma: no cover
+        return bool(self._obj())
+
+    def __contains__(self, item):  # pragma: no cover
+        return item in self._obj()
+
+    def __add__(self, other):  # pragma: no cover
+        return self._obj() + other
+
+    def __sub__(self, other):  # pragma: no cover
+        return self._obj() - other
+
+    def __mul__(self, other):  # pragma: no cover
+        return self._obj() * other
+
+    def __truediv__(self, other):  # pragma: no cover
+        return self._obj() / other
+
+    def __floordiv__(self, other):  # pragma: no cover
+        return self._obj() // other
+
+    def __mod__(self, other):  # pragma: no cover
+        return self._obj() % other
+
+    def __pow__(self, other):  # pragma: no cover
+        return self._obj() ** other
+
+    def __radd__(self, other):  # pragma: no cover
+        return other + self._obj()
+
+    def __rsub__(self, other):  # pragma: no cover
+        return other - self._obj()
+
+    def __rmul__(self, other):  # pragma: no cover
+        return other * self._obj()
+
+    def __rtruediv__(self, other):  # pragma: no cover
+        return other / self._obj()
+
+    def __rfloordiv__(self, other):  # pragma: no cover
+        return other // self._obj()
+
+    def __rmod__(self, other):  # pragma: no cover
+        return other % self._obj()
+
+    def __rpow__(self, other):  # pragma: no cover
+        return other ** self._obj()
+
+    def __neg__(self):  # pragma: no cover
+        return -self._obj()
+
+    def __pos__(self):  # pragma: no cover
+        return +self._obj()
+
+    def __abs__(self):  # pragma: no cover
+        return abs(self._obj())
+
     def __call__(self, *args, **kwargs):
         return self._obj()(*args, **kwargs)
