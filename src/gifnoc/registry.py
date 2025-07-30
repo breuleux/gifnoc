@@ -10,7 +10,7 @@ from typing import Optional, TypeVar
 from serieux import (
     DottedNotation,
     Environment,
-    FromFileExtra,
+    IncludeFile,
     Lazy,
     Serieux,
     Sources,
@@ -25,7 +25,7 @@ from .proxy import Proxy
 _T = TypeVar("_T")
 
 
-deserialize = (Serieux + FromFileExtra + DottedNotation)().deserialize
+deserialize = (Serieux + IncludeFile + DottedNotation)().deserialize
 
 
 class Configuration:
