@@ -4,7 +4,7 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Literal, Mapping, Sequence
 
 import yaml
 from serieux import CommandLineArguments, TaggedUnion, deserialize, schema, serialize
@@ -41,7 +41,7 @@ class Dump:
 
     # Dump format
     # [alias: -f]
-    format: str = "yaml"
+    format: Literal["raw", "yaml", "json"] = "yaml"
 
     def __call__(self):
         container = global_registry.current()
@@ -53,14 +53,13 @@ class Dump:
             data = value_at(data, self.subpath)
 
         serialized = serialize(model, data)
-        if self.format == "raw":  # pragma: no cover
-            dmp = str(serialized)
-        elif self.format == "yaml":
-            dmp = yaml.safe_dump(serialized)
-        elif self.format == "json":
-            dmp = json.dumps(serialized, indent=4)
-        else:  # pragma: no cover
-            sys.exit(f"Unsupported dump format: {format}")
+        match self.format:
+            case "raw":  # pragma: no cover
+                dmp = str(serialized)
+            case "yaml":
+                dmp = yaml.safe_dump(serialized)
+            case "json":
+                dmp = json.dumps(serialized, indent=4)
         print(dmp)
 
 
