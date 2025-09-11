@@ -18,6 +18,7 @@ from serieux import (
     parse_cli,
 )
 from serieux.features.dotted import unflatten
+from serieux.features.encrypt import EncryptionKey
 from serieux.features.partial import NOT_GIVEN
 
 from .proxy import Proxy
@@ -56,7 +57,9 @@ class Configuration:
         self._data = deserialize(
             model,
             Sources(defaults, *self.sources),
-            Environment() + WorkingDirectory(directory=Path(os.getcwd())),
+            Environment()
+            + WorkingDirectory(directory=Path(os.getcwd()))
+            + EncryptionKey(password=os.environ.get("SERIEUX_PASSWORD", None)),
         )
         self.version = self.registry.version
 
