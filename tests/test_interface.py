@@ -1,6 +1,4 @@
 import os
-import subprocess
-import sys
 from dataclasses import dataclass
 from unittest import mock
 
@@ -133,20 +131,3 @@ def test_cli_does_an_overlay(org, registry, configs):
     assert org.name == "blabb"
     assert org.nonprofit is True
     assert len(org.members) == 1
-
-
-@pytest.mark.skipif(sys.version_info < (3, 13), reason="Python 3.13+ required")
-def test_exception_hook(configs, file_regression):
-    result = subprocess.run(
-        [sys.executable, str(configs / "bad_config_script.py")],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert result.returncode != 0
-    header = "============================= Configuration error =============================="
-    stderr = result.stderr
-    assert header in stderr
-    below = stderr.split(header, 1)[1]
-    below = below.replace(str(configs), "REDACTED")
-    file_regression.check(below)

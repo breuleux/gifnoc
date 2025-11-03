@@ -100,6 +100,10 @@ class Configuration:
         self._token = None
 
 
+class DefaultSerieuxConfig:
+    allow_extras = True
+
+
 @dataclass
 class RegisteredConfig:
     path: str
@@ -118,6 +122,9 @@ class RegisteredConfig:
                     (name, cfg.build(), field(default=NOT_GIVEN))
                     for name, cfg in self.extras.items()
                 ],
+                namespace={
+                    "SerieuxConfig": DefaultSerieuxConfig,
+                },
             )
         return dc
 

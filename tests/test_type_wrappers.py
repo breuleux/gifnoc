@@ -1,4 +1,4 @@
-from serieux import Extensible, TaggedSubclass, deserialize, schema, serialize
+from serieux import AllowExtras, TaggedSubclass, deserialize, schema, serialize
 
 from .models import Point, Point3D, Point4D
 
@@ -25,21 +25,21 @@ def test_TaggedSubclass_schema(file_regression):
     file_regression.check(sch.json(), extension=".json")
 
 
-def test_Extensible():
+def test_AllowExtras():
     ser = {
         "x": 1,
         "y": 2,
         "garbage": 3,
     }
-    deser = deserialize(Extensible[Point], ser)
+    deser = deserialize(AllowExtras[Point], ser)
     assert deser == Point(x=1, y=2)
-    ser2 = serialize(Extensible[Point], deser)
+    ser2 = serialize(AllowExtras[Point], deser)
     assert ser2 == {
         "x": 1,
         "y": 2,
     }
 
 
-def test_Extensible_schema(file_regression):
-    sch = schema(Extensible[Point])
+def test_AllowExtras_schema(file_regression):
+    sch = schema(AllowExtras[Point])
     file_regression.check(sch.json(), extension=".json")
