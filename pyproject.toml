@@ -1,6 +1,6 @@
 [project]
 name = "gifnoc"
-version = "0.6.2"
+version = "0.6.3"
 description = "Handle configuration for multiple libraries"
 authors = [
     { name = "Olivier Breuleux", email = "breuleux@gmail.com" }
