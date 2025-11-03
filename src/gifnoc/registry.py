@@ -131,7 +131,7 @@ class RegisteredConfig:
 
 @dataclass
 class Root:
-    pass
+    SerieuxConfig = DefaultSerieuxConfig
 
 
 class Registry:
